@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="320dp"
+    android:height="180dp"
+    android:viewportWidth="320"
+    android:viewportHeight="180">
+    <!-- Dark Background -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M0,0h320v180h-320z" />
+    <!-- Orange Play-like Triangle -->
+    <path
+        android:fillColor="#FF6D00"
+        android:pathData="M120,40 L220,90 L120,140 Z" />
+    <!-- 'A' Shape Cutout -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M160,80 L135,130 L145,130 L160,105 L175,130 L185,130 Z" />
+</vector>

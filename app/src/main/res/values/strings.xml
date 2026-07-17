@@ -1,0 +1,67 @@
+<resources>
+    <string name="app_name">Aladin CCTV</string>
+
+    <!-- UI Elements -->
+    <string name="cctv_settings">CCTV Camera Settings</string>
+    <string name="scan_network">SCAN NETWORK (ONVIF)</string>
+    <string name="save_settings">SAVE SETTINGS</string>
+    <string name="export_usb">EXPORT TO USB</string>
+    <string name="import_usb">IMPORT FROM USB</string>
+    <string name="security">Security</string>
+    <string name="enable_offline_alarm">Enable Offline Audible Alarm</string>
+    <string name="pin_hint">4-Digit PIN (Leave empty to disable)</string>
+    <string name="main_stream_hint">Main Stream URL</string>
+    <string name="sub_stream_hint">Sub Stream URL</string>
+    <string name="ip_hint">IP Address</string>
+    <string name="user_hint">Username</string>
+    <string name="pass_hint">Password</string>
+    <string name="generate_urls">Generate URLs</string>
+    <string name="ptz_label">Support ONVIF PTZ</string>
+    <string name="cam_label">Camera %1$d</string>
+
+    <!-- Status & Overlays -->
+    <string name="waiting_network">Waiting for Network...</string>
+    <string name="network_lost">Network Lost - Reconnecting...</string>
+    <string name="tour_mode_active">TOUR MODE ACTIVE</string>
+    <string name="ptz_mode">PTZ MODE</string>
+    <string name="digital_zoom_mode">DIGITAL ZOOM MODE</string>
+    <string name="zoom_level">Zoom: x%1$.1f</string>
+    <string name="page_format">Page %1$d/%2$d</string>
+    <string name="connection_lost_retry">Connection Lost - Retrying...</string>
+
+    <!-- Stats -->
+    <string name="stats_format">Resolution: %1$dx%2$d\nCodec: %3$s\nBitrate: %4$s\nFrame Rate: %5$s</string>
+
+    <!-- Dialogs & Security -->
+    <string name="auth_required">Authentication Required</string>
+    <string name="auth_message">Please enter the PIN to continue.</string>
+    <string name="enter_pin">Enter 4-Digit PIN</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+    <string name="select_camera">Select a Camera</string>
+
+    <!-- Toasts & Feedback -->
+    <string name="press_back_exit">Press back again to exit</string>
+    <string name="exit_denied">Exit Denied</string>
+    <string name="access_denied">Access Denied</string>
+    <string name="incorrect_pin">Incorrect PIN</string>
+    <string name="ptz_on">PTZ Mode ON</string>
+    <string name="ptz_off">PTZ Mode OFF</string>
+    <string name="ptz_not_supported">PTZ not supported for this camera</string>
+    <string name="snapshot_saved">Snapshot Saved to Pictures</string>
+    <string name="snapshot_failed">Snapshot Failed</string>
+    <string name="snapshot_error">Error Saving Snapshot</string>
+    <string name="playback_title">Select Playback Time</string>
+    <string name="start_playback">Start Playback</string>
+    <string name="live_stream">Live</string>
+    <string name="playback_mode">PLAYBACK MODE</string>
+    <string name="auto_filled_cam">Auto-filled Camera %1$d</string>
+    <string name="scanning_onvif">Scanning for ONVIF devices...</string>
+    <string name="no_devices_found">No devices found</string>
+    <string name="settings_saved">Settings Saved</string>
+    <string name="config_exported">Configuration Exported</string>
+    <string name="export_failed">Export Failed</string>
+    <string name="import_success">Import Successful. Restarting...</string>
+    <string name="import_failed">Import Failed</string>
+    <string name="failed_reconnect_attempts">Failed to connect after multiple attempts</string>
+</resources>

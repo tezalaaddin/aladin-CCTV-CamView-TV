@@ -1,0 +1,67 @@
+<resources>
+    <string name="app_name">Aladin CCTV</string>
+
+    <!-- UI Elements -->
+    <string name="cctv_settings">CCTV Kamera Ayarları</string>
+    <string name="scan_network">AĞI TARA (ONVIF)</string>
+    <string name="save_settings">AYARLARI KAYDET</string>
+    <string name="export_usb">USB\'YE AKTAR</string>
+    <string name="import_usb">USB\'DEN AL</string>
+    <string name="security">Güvenlik</string>
+    <string name="enable_offline_alarm">Bağlantı Kesilme Alarmını Etkinleştir</string>
+    <string name="pin_hint">4 Haneli PIN (Devre dışı bırakmak için boş bırakın)</string>
+    <string name="main_stream_hint">Ana Yayın (Main Stream) URL</string>
+    <string name="sub_stream_hint">Alt Yayın (Sub Stream) URL</string>
+    <string name="ip_hint">IP Adresi</string>
+    <string name="user_hint">Kullanıcı Adı</string>
+    <string name="pass_hint">Şifre</string>
+    <string name="generate_urls">URL Oluştur</string>
+    <string name="ptz_label">ONVIF PTZ Desteği</string>
+    <string name="cam_label">Kamera %1$d</string>
+
+    <!-- Status & Overlays -->
+    <string name="waiting_network">Ağ Bağlantısı Bekleniyor...</string>
+    <string name="network_lost">Ağ Koptu - Yeniden Bağlanılıyor...</string>
+    <string name="tour_mode_active">DEVRİYE MODU AKTİF</string>
+    <string name="ptz_mode">PTZ KONTROLÜ</string>
+    <string name="digital_zoom_mode">DİJİTAL YAKINLAŞTIRMA MODU</string>
+    <string name="zoom_level">Yakınlaştırma: x%1$.1f</string>
+    <string name="page_format">Sayfa %1$d/%2$d</string>
+    <string name="connection_lost_retry">Bağlantı Koptu - Deneniyor...</string>
+
+    <!-- Stats -->
+    <string name="stats_format">Çözünürlük: %1$dx%2$d\nKodek: %3$s\nBit Hızı: %4$s\nKare Hızı: %5$s</string>
+
+    <!-- Dialogs & Security -->
+    <string name="auth_required">Kimlik Doğrulama Gerekli</string>
+    <string name="auth_message">Devam etmek için lütfen PIN kodunu giriniz.</string>
+    <string name="enter_pin">4 Haneli PIN Girin</string>
+    <string name="confirm">Onayla</string>
+    <string name="cancel">İptal</string>
+    <string name="select_camera">Bir Kamera Seçin</string>
+
+    <!-- Toasts & Feedback -->
+    <string name="press_back_exit">Çıkmak için tekrar geri basın</string>
+    <string name="exit_denied">Çıkış Reddedildi</string>
+    <string name="access_denied">Erişim Reddedildi</string>
+    <string name="incorrect_pin">Hatalı PIN</string>
+    <string name="ptz_on">PTZ Modu AÇIK</string>
+    <string name="ptz_off">PTZ Modu KAPALI</string>
+    <string name="ptz_not_supported">Bu kamera PTZ desteklemiyor</string>
+    <string name="snapshot_saved">Ekran Görüntüsü Resimlere Kaydedildi</string>
+    <string name="snapshot_failed">Ekran Görüntüsü Alınamadı</string>
+    <string name="snapshot_error">Kaydetme Hatası</string>
+    <string name="playback_title">Kayıt İzleme Zamanı Seçin</string>
+    <string name="start_playback">Kayıttan Oynat</string>
+    <string name="live_stream">Canlı</string>
+    <string name="playback_mode">KAYIT İZLEME MODU</string>
+    <string name="auto_filled_cam">Kamera %1$d Otomatik Dolduruldu</string>
+    <string name="scanning_onvif">ONVIF cihazları taranıyor...</string>
+    <string name="no_devices_found">Cihaz bulunamadı</string>
+    <string name="settings_saved">Ayarlar Kaydedildi</string>
+    <string name="config_exported">Konfigürasyon Dışa Aktarıldı</string>
+    <string name="export_failed">Dışa Aktarma Başarısız</string>
+    <string name="import_success">İçe Aktarma Başarılı. Yeniden başlatılıyor...</string>
+    <string name="import_failed">İçe Aktarma Başarısız</string>
+    <string name="failed_reconnect_attempts">Çok sayıda denemeden sonra bağlantı kurulamadı</string>
+</resources>
