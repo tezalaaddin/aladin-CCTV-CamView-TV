@@ -4,6 +4,7 @@ Aladin CCTV is a professional, high-performance CCTV viewer application specific
 
 ## 🚀 Key Features
 
+- **📲 Ready to Install:** You can find the compiled APKs in the [release_apk](release_apk/) folder.
 - **📺 Optimized for Android TV:** Native D-Pad navigation and leanback-style interface for the best TV experience.
 - **⚡ High-Performance RTSP:** Powered by Google's Media3 (ExoPlayer) with RTSP extension for stable, low-latency streams.
 - **🎮 Dynamic ONVIF PTZ:** 
