@@ -17,11 +17,18 @@ android {
         versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // 🚀 OPTIMIZATION: Most TVs use ARM. Removing x86/x86_64 saves ~100MB
+        ndk {
+            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+        }
     }
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            // 🚀 OPTIMIZATION: Enable shrinking and obfuscation
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -43,11 +50,6 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation(libs.material)
 
-    // Media3 dependencies (Stable)
-    implementation(libs.androidx.media3.exoplayer)
-    implementation(libs.androidx.media3.exoplayer.rtsp)
-    implementation(libs.androidx.media3.ui)
-
     // Room
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
@@ -64,7 +66,7 @@ dependencies {
     // Security
     implementation(libs.androidx.security.crypto)
 
-    // LibVLC for robust RTSP (Fixes Redline/Aselsan metadata issues)
+    // LibVLC for robust RTSP (Main Engine)
     implementation("org.videolan.android:libvlc-all:3.6.5")
 
     // Networking
