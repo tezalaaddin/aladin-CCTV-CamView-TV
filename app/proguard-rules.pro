@@ -4,8 +4,19 @@
 -keep class androidx.media3.ui.** { *; }
 -keep class androidx.media3.exoplayer.rtsp.** { *; }
 
-# Keep our data models used for Intent/Parcelable
--keep class com.aladin.aladincamviewer.CameraModel { *; }
+# Keep our package classes from being stripped (Room, ViewModel, Models)
+-keep class com.aladin.aladincamviewer.** { *; }
+
+# Keep Room generated code
+-keep class * extends androidx.room.RoomDatabase
+-keep class androidx.room.RoomDatabase { *; }
+-keep class * extends androidx.room.Dao
+-keep class * extends androidx.room.Entity
+
+# Keep ViewModel constructors
+-keepclassmembers class * extends androidx.lifecycle.ViewModel {
+    public <init>(...);
+}
 
 # Keep everything required for Kotlin Parcelize
 -keepnames class * implements android.os.Parcelable
@@ -14,7 +25,6 @@
 }
 
 # ONVIF / XML Parsing logic preservation
--keep class com.aladin.aladincamviewer.OnvifScanner { *; }
 -keepclassmembers class ** {
     @org.json.* *;
 }

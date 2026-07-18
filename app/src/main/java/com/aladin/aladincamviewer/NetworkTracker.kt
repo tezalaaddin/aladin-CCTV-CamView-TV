@@ -15,15 +15,34 @@ import kotlinx.coroutines.withContext
  */
 class NetworkTracker(private val context: Context, private val repository: CameraRepository) {
 
+    companion object {
+        private var instance: NetworkTracker? = null
+
+        fun getInstance(context: Context, repository: CameraRepository): NetworkTracker {
+            return instance ?: synchronized(this) {
+                instance ?: NetworkTracker(context.applicationContext, repository).also { instance = it }
+            }
+        }
+
+        fun triggerUpdate() {
+            instance?.triggerUpdate()
+        }
+    }
+
     private val scanner = OnvifScanner(context)
     private val scope = CoroutineScope(Dispatchers.IO)
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var isUpdating = false
 
-    fun startTracking() {
+    fun triggerUpdate() {
+        if (isUpdating) return
         scope.launch {
-            // Delay to allow network initialization on boot
-            kotlinx.coroutines.delay(8000)
-            updateCameraIps()
+            isUpdating = true
+            try {
+                updateCameraIps()
+            } finally {
+                isUpdating = false
+            }
         }
     }
 

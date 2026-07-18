@@ -1,6 +1,7 @@
 package com.aladin.aladincamviewer
 
 import android.content.ContentValues
+import android.content.Intent
 import android.graphics.Bitmap
 import android.os.*
 import android.provider.MediaStore
@@ -310,9 +311,45 @@ class FullScreenCameraActivity : AppCompatActivity() {
     }
 
     private fun generatePlaybackUrl(camera: CameraModel, time: Date): String {
-        val sdf = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.getDefault())
-        val startTime = sdf.format(time)
-        return "rtsp://${camera.username}:${camera.password}@${camera.ipAddress}:554/Streaming/tracks/101/?starttime=$startTime"
+        val calendar = Calendar.getInstance()
+        calendar.time = time
+        calendar.add(Calendar.HOUR_OF_DAY, 1)
+        val endTimeDate = calendar.time
+
+        return when (camera.brand) {
+            "Hikvision" -> {
+                val sdf = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.getDefault())
+                val start = sdf.format(time)
+                val end = sdf.format(endTimeDate)
+                "rtsp://${camera.username}:${camera.password}@${camera.ipAddress}:554/Streaming/tracks/101/?starttime=$start&endtime=$end"
+            }
+            "Dahua" -> {
+                val sdf = SimpleDateFormat("yyyy_MM_dd_HH_mm_ss", Locale.getDefault())
+                val start = sdf.format(time)
+                val end = sdf.format(endTimeDate)
+                "rtsp://${camera.username}:${camera.password}@${camera.ipAddress}:554/cam/playback?channel=1&starttime=$start&endtime=$end"
+            }
+            "Tiandy" -> {
+                val sdf = SimpleDateFormat("yyyyMMddHHmmss", Locale.getDefault())
+                val start = sdf.format(time)
+                "rtsp://${camera.username}:${camera.password}@${camera.ipAddress}:554/vod/ch1/main/$start"
+            }
+            "Uniview" -> {
+                val sdf = SimpleDateFormat("yyyyMMdd'T'HHmmss", Locale.getDefault())
+                val start = sdf.format(time)
+                "rtsp://${camera.username}:${camera.password}@${camera.ipAddress}:554/unicast/c1/s1/playback?starttime=$start"
+            }
+            "ONVIF" -> {
+                val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.getDefault())
+                val start = sdf.format(time)
+                // Standard ONVIF Profile G playback URL
+                "rtsp://${camera.username}:${camera.password}@${camera.ipAddress}:554/onvif-media/media.amp?streamprotocol=rtp-unicast&playback=true&starttime=$start"
+            }
+            else -> {
+                val sdf = SimpleDateFormat("yyyyMMdd'T'HHmmss'Z'", Locale.getDefault())
+                "rtsp://${camera.username}:${camera.password}@${camera.ipAddress}:554/Streaming/tracks/101/?starttime=${sdf.format(time)}"
+            }
+        }
     }
 
     override fun onStart() {
