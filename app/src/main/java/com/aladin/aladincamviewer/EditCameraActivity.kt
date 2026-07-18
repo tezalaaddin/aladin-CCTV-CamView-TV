@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 
 class EditCameraActivity : AppCompatActivity() {
 
-    private val brands = listOf("Hikvision", "Dahua", "Tiandy", "AJCloud", "Custom")
+    private val brands = listOf("Hikvision", "Dahua", "Tiandy", "Uniview", "ONVIF", "AJCloud", "Custom")
     private var selectedBrand = "Custom"
     private var cameraId = 0
     private var displayOrder = 1
@@ -141,6 +141,10 @@ class EditCameraActivity : AppCompatActivity() {
             "Tiandy" -> {
                 val base = "rtsp://$user:$pass@$ip:554/1/"
                 Pair("${base}1", "${base}2")
+            }
+            "Uniview" -> {
+                val base = "rtsp://$user:$pass@$ip:554/unicast/c1/s"
+                Pair("${base}0/live", "${base}1/live")
             }
             "AJCloud" -> {
                 val base = "rtsp://$user:$pass@$ip:554/live/"

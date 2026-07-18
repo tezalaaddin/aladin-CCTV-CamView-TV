@@ -70,8 +70,8 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.btn_tour_top).setOnClickListener { startTour() }
 
         val cameraDao = AppDatabase.getDatabase(this).cameraDao()
-        networkTracker = NetworkTracker(this, CameraRepository(cameraDao))
-        networkTracker.startTracking()
+        networkTracker = NetworkTracker.getInstance(this, CameraRepository(cameraDao))
+        networkTracker.triggerUpdate()
 
         observeCameras()
     }

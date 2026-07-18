@@ -87,41 +87,8 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun scanNetwork() {
-        lifecycleScope.launch {
-            Toast.makeText(this@SettingsActivity, getString(R.string.scanning_onvif), Toast.LENGTH_SHORT).show()
-            val devices = scanner.discoverDevices()
-            if (devices.isNotEmpty()) {
-                val displayList = devices.map { "${it.brand} (${it.ip})" }
-                androidx.appcompat.app.AlertDialog.Builder(this@SettingsActivity)
-                    .setTitle(getString(R.string.select_camera))
-                    .setItems(displayList.toTypedArray()) { _, which ->
-                        val device = devices[which]
-                        Toast.makeText(this@SettingsActivity, "Device found: ${device.ip}", Toast.LENGTH_SHORT).show()
-                        
-                        // New logic: Check if we can auto-fill a slot or update UUID
-                        lifecycleScope.launch {
-                            val camera = CameraEntity(
-                                name = "Cam Discovery",
-                                ipAddress = device.ip,
-                                username = "admin", // Default
-                                password = "",
-                                mainStreamUrl = "", 
-                                subStreamUrl = "",
-                                brand = device.brand,
-                                uuid = device.uuid
-                            )
-                            // This would ideally open EditCameraActivity with these pre-filled
-                            val intent = Intent(this@SettingsActivity, EditCameraActivity::class.java).apply {
-                                putExtra("prefilled_ip", device.ip)
-                                putExtra("prefilled_brand", device.brand)
-                                putExtra("prefilled_uuid", device.uuid)
-                            }
-                            startActivity(intent)
-                        }
-                    }
-                    .show()
-            }
-        }
+        val intent = Intent(this, DiscoveryActivity::class.java)
+        startActivity(intent)
     }
 
     private fun exportConfig(uri: Uri) {

@@ -78,6 +78,9 @@ class CctvPlayerManager(
             pendingErrorMsg = context.getString(R.string.connection_lost_retry)
             scheduleErrorUiUpdate(5000)
             
+            // Trigger NetworkTracker to check if IP has changed
+            NetworkTracker.triggerUpdate()
+
             if (error.errorCode == PlaybackException.ERROR_CODE_DECODER_INIT_FAILED || 
                 error.errorCode == PlaybackException.ERROR_CODE_DECODING_FAILED) {
                 releasePlayer()
