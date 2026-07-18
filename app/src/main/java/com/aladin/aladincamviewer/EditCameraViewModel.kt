@@ -27,4 +27,10 @@ class EditCameraViewModel(application: Application) : AndroidViewModel(applicati
             }
         }
     }
+
+    fun deleteCamera(camera: CameraEntity) {
+        viewModelScope.launch {
+            repository.delete(camera)
+        }
+    }
 }

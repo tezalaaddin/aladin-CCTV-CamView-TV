@@ -1,15 +1,24 @@
 <resources>
     <string name="app_name">Aladin CCTV</string>
+    <string name="click_to_add_camera">Kamera Eklemek İçin Tıklayın</string>
+    <string name="connecting">Bağlanıyor...</string>
+    <string name="loading">Yükleniyor...</string>
 
     <!-- UI Elements -->
+    <string name="cctv_dashboard">CCTV DASHBOARD</string>
     <string name="cctv_settings">CCTV Camera Settings</string>
     <string name="scan_network">SCAN NETWORK (ONVIF)</string>
+    <string name="scan_network_btn">SCAN NETWORK</string>
     <string name="save_settings">SAVE SETTINGS</string>
     <string name="export_usb">EXPORT TO USB</string>
+    <string name="export_btn">EXPORT</string>
     <string name="import_usb">IMPORT FROM USB</string>
+    <string name="import_btn">IMPORT</string>
     <string name="security">Security</string>
     <string name="enable_offline_alarm">Enable Offline Audible Alarm</string>
+    <string name="offline_alarm">Offline Alarm</string>
     <string name="pin_hint">4-Digit PIN (Leave empty to disable)</string>
+    <string name="app_pin_label">APP PIN</string>
     <string name="main_stream_hint">Main Stream URL</string>
     <string name="sub_stream_hint">Sub Stream URL</string>
     <string name="ip_hint">IP Address</string>
@@ -18,6 +27,39 @@
     <string name="generate_urls">Generate URLs</string>
     <string name="ptz_label">Support ONVIF PTZ</string>
     <string name="cam_label">Camera %1$d</string>
+    <string name="slot_label">Slot %1$d</string>
+    <string name="not_configured">Not Configured</string>
+    <string name="diagnostic_btn">RTSP DIAGNOSTIC TEST</string>
+
+    <string name="slot_setup_title">SLOT %1$d SETUP</string>
+    <string name="delete_camera">Delete Camera</string>
+    <string name="delete_confirm_msg">Are you sure you want to delete this camera?</string>
+    <string name="credentials_fill_warning">Fill username/password to apply to all</string>
+    <string name="credentials_applied_msg">Credentials applied to all cameras</string>
+    <string name="fill_details_warning">Please fill IP, Username and Password first</string>
+    <string name="onvif_scanning_msg">Deep Scanning Camera via ONVIF...\nPlease wait.</string>
+    <string name="onvif_success_msg">SUCCESS: %1$s identified and stream standardized.</string>
+    <string name="onvif_fail_msg">ONVIF Discovery Failed.</string>
+    <string name="select_brand">Select Brand</string>
+    <string name="brand_label">Brand: %1$s</string>
+    <string name="cam_slot_saved">Camera Slot %1$d Saved</string>
+    <string name="enter_ip_warning">Please enter IP address</string>
+    <string name="add_selected_btn">ADD SELECTED (%1$d)</string>
+    <string name="camera_credentials">Camera Credentials</string>
+    <string name="add">ADD</string>
+    <string name="camera_deleted">Camera Deleted</string>
+
+    <string name="user_label">USER</string>
+    <string name="pass_label">PASS</string>
+    <string name="fix_btn">FIX / AUTO REPAIR (ODM)</string>
+    <string name="template_btn">GENERATE FROM TEMPLATE</string>
+    <string name="main_rtsp_label">MAIN STREAM RTSP URL</string>
+    <string name="sub_rtsp_label">SUB STREAM RTSP URL</string>
+    <string name="ptz_enabled_label">PTZ Support Enabled</string>
+    <string name="save_btn">SAVE CAMERA</string>
+    <string name="clear_btn">DELETE / CLEAR SLOT</string>
+    <string name="apply_all_btn">Apply User/Pass to all cameras</string>
+    <string name="zoom_label">Zoom</string>
 
     <!-- Status & Overlays -->
     <string name="waiting_network">Waiting for Network...</string>
@@ -26,6 +68,8 @@
     <string name="ptz_mode">PTZ MODE</string>
     <string name="digital_zoom_mode">DIGITAL ZOOM MODE</string>
     <string name="zoom_level">Zoom: x%1$.1f</string>
+    <string name="tour">TOUR</string>
+    <string name="settings">SETTINGS</string>
     <string name="page_format">Page %1$d/%2$d</string>
     <string name="connection_lost_retry">Connection Lost - Retrying...</string>
 
@@ -39,6 +83,9 @@
     <string name="confirm">Confirm</string>
     <string name="cancel">Cancel</string>
     <string name="select_camera">Select a Camera</string>
+    <string name="select_language">Select Language / Dil Seçin</string>
+    <string name="english">English</string>
+    <string name="turkish">Türkçe</string>
 
     <!-- Toasts & Feedback -->
     <string name="press_back_exit">Press back again to exit</string>

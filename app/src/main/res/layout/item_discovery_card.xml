@@ -1,82 +1,173 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="280dp"
+    android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_margin="8dp"
+    android:layout_margin="6dp"
     android:focusable="true"
     android:clickable="true"
     app:cardBackgroundColor="#1F1F1F"
-    app:cardCornerRadius="16dp"
+    app:cardCornerRadius="12dp"
     app:strokeWidth="0dp"
     app:strokeColor="@color/brand_orange">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:padding="12dp">
 
         <ImageView
-            android:id="@+id/img_preview"
-            android:layout_width="match_parent"
-            android:layout_height="140dp"
-            android:scaleType="centerCrop"
-            android:src="@drawable/ic_banner"
-            android:background="#121212"
-            app:layout_constraintTop_toTopOf="parent" />
+            android:id="@+id/img_brand_logo"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:alpha="0.8"
+            android:src="@android:drawable/ic_menu_camera"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:tint="@color/white" />
 
         <CheckBox
             android:id="@+id/check_select"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_margin="8dp"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txt_model"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="MODEL: UNKNOWN"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            app:layout_constraintEnd_toStartOf="@id/check_select"
+            app:layout_constraintStart_toEndOf="@id/img_brand_logo"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/txt_brand"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:text="Generic Device"
+            android:textColor="@color/brand_orange"
+            android:textSize="12sp"
+            app:layout_constraintEnd_toStartOf="@id/check_select"
+            app:layout_constraintStart_toStartOf="@id/txt_model"
+            app:layout_constraintTop_toBottomOf="@id/txt_model" />
+
+        <View
+            android:id="@+id/divider"
+            android:layout_width="match_parent"
+            android:layout_height="0.5dp"
+            android:layout_marginTop="8dp"
+            android:background="#33FFFFFF"
+            app:layout_constraintTop_toBottomOf="@id/img_brand_logo" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
             android:orientation="vertical"
-            android:padding="12dp"
-            app:layout_constraintTop_toBottomOf="@id/img_preview">
+            app:layout_constraintTop_toBottomOf="@id/divider">
 
-            <TextView
-                android:id="@+id/txt_brand"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Hikvision"
-                android:textColor="@color/brand_orange"
-                android:textSize="18sp"
-                android:textStyle="bold" />
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="65dp"
+                    android:layout_height="wrap_content"
+                    android:text="IP Address:"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="10sp" />
+                <TextView
+                    android:id="@+id/txt_ip"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="192.168.1.45"
+                    android:textColor="@color/white"
+                    android:textSize="10sp" />
+            </LinearLayout>
 
-            <TextView
-                android:id="@+id/txt_ip"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="192.168.1.100"
-                android:textColor="@color/white"
-                android:alpha="0.8" />
+                android:layout_marginTop="2dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="65dp"
+                    android:layout_height="wrap_content"
+                    android:text="MAC Addr:"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="10sp" />
+                <TextView
+                    android:id="@+id/txt_mac"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="00:00:00:00:00:00"
+                    android:textColor="@color/white"
+                    android:textSize="10sp" />
+            </LinearLayout>
 
-            <TextView
-                android:id="@+id/txt_protocols"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="65dp"
+                    android:layout_height="wrap_content"
+                    android:text="Firmware:"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="10sp" />
+                <TextView
+                    android:id="@+id/txt_firmware"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="middle"
+                    android:maxLines="1"
+                    android:text="Unknown FW"
+                    android:textColor="@color/white"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="4dp"
-                android:text="ONVIF, mDNS"
-                android:textColor="#80FFFFFF"
-                android:textSize="12sp" />
+                android:orientation="horizontal">
+                <TextView
+                    android:layout_width="65dp"
+                    android:layout_height="wrap_content"
+                    android:text="Protocols:"
+                    android:textColor="#99FFFFFF"
+                    android:textSize="10sp" />
+                <TextView
+                    android:id="@+id/txt_protocols"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="ONVIF, PING"
+                    android:textColor="@color/brand_orange"
+                    android:textSize="9sp"
+                    android:textStyle="bold" />
+            </LinearLayout>
         </LinearLayout>
 
         <TextView
             android:id="@+id/badge_added"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_margin="8dp"
             android:background="#2E7D32"
-            android:paddingHorizontal="8dp"
-            android:paddingVertical="2dp"
+            android:paddingHorizontal="4dp"
+            android:paddingVertical="1dp"
             android:text="ADDED"
             android:textColor="@color/white"
-            android:textSize="10sp"
+            android:textSize="8sp"
+            android:textStyle="bold"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />

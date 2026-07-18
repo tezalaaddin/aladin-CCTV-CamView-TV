@@ -9,18 +9,45 @@
     android:clickable="true"
     app:cardBackgroundColor="@android:color/black"
     app:cardCornerRadius="4dp"
-    app:strokeColor="@color/white"
     app:strokeWidth="0dp">
 
-    <androidx.media3.ui.PlayerView
-        android:id="@+id/player_view"
+    <!-- Focus Highlighter -->
+    <View
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:surface_type="surface_view"
-        app:use_controller="false"
-        app:resize_mode="fill"
-        app:keep_content_on_player_reset="true"
-        app:shutter_background_color="@android:color/transparent" />
+        android:background="@drawable/camera_item_selector" />
+
+    <org.videolan.libvlc.util.VLCVideoLayout
+        android:id="@+id/player_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Placeholder for Empty State -->
+    <LinearLayout
+        android:id="@+id/empty_placeholder"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@android:drawable/ic_menu_add"
+            android:alpha="0.5"
+            app:tint="@color/white" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Kamera Eklemek İçin Tıklayın"
+            android:textColor="@color/white"
+            android:alpha="0.5"
+            android:textSize="12sp"
+            android:layout_marginTop="8dp" />
+    </LinearLayout>
 
     <ProgressBar
         android:id="@+id/loading_progress"
@@ -72,6 +99,6 @@
         android:layout_height="12dp"
         android:layout_gravity="top|end"
         android:layout_margin="8dp"
-        android:background="@android:drawable/presence_offline" />
+        android:background="@drawable/led_offline" />
 
 </com.google.android.material.card.MaterialCardView>

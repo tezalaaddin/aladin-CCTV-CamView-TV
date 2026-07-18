@@ -17,5 +17,6 @@ data class CameraEntity(
     val brand: String = "Custom",
     val ptzSupported: Boolean = false,
     val displayOrder: Int = 0,
-    val uuid: String = "" // For DHCP IP auto-discovery
+    val uuid: String = "", // For DHCP IP auto-discovery via ONVIF
+    val macAddress: String? = null // Most reliable for DHCP IP auto-discovery
 )

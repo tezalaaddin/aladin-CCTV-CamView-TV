@@ -33,6 +33,12 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     fun isOfflineAlarmEnabled() = prefHelper.isOfflineAlarmEnabled
 
+    fun saveCamera(camera: CameraEntity) {
+        viewModelScope.launch {
+            if (camera.id == 0) repository.insert(camera) else repository.update(camera)
+        }
+    }
+
     fun exportConfig(outputStream: OutputStream, cameras: List<CameraEntity>) {
         viewModelScope.launch {
             val config = ConfigModel(cameras, prefHelper.appPin, prefHelper.isOfflineAlarmEnabled)
