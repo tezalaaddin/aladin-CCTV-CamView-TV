@@ -1,15 +1,24 @@
 <resources>
     <string name="app_name">Aladin CCTV</string>
+    <string name="click_to_add_camera">Kamera Eklemek İçin Tıklayın</string>
+    <string name="connecting">Bağlanıyor...</string>
+    <string name="loading">Yükleniyor...</string>
 
     <!-- UI Elements -->
+    <string name="cctv_dashboard">CCTV PANELİ</string>
     <string name="cctv_settings">CCTV Kamera Ayarları</string>
     <string name="scan_network">AĞI TARA (ONVIF)</string>
+    <string name="scan_network_btn">AĞI TARA</string>
     <string name="save_settings">AYARLARI KAYDET</string>
     <string name="export_usb">USB\'YE AKTAR</string>
+    <string name="export_btn">DIŞA AKTAR</string>
     <string name="import_usb">USB\'DEN AL</string>
+    <string name="import_btn">İÇE AKTAR</string>
     <string name="security">Güvenlik</string>
     <string name="enable_offline_alarm">Bağlantı Kesilme Alarmını Etkinleştir</string>
+    <string name="offline_alarm">Bağlantı Alarmı</string>
     <string name="pin_hint">4 Haneli PIN (Devre dışı bırakmak için boş bırakın)</string>
+    <string name="app_pin_label">UYGULAMA ŞİFRESİ</string>
     <string name="main_stream_hint">Ana Yayın (Main Stream) URL</string>
     <string name="sub_stream_hint">Alt Yayın (Sub Stream) URL</string>
     <string name="ip_hint">IP Adresi</string>
@@ -18,6 +27,39 @@
     <string name="generate_urls">URL Oluştur</string>
     <string name="ptz_label">ONVIF PTZ Desteği</string>
     <string name="cam_label">Kamera %1$d</string>
+    <string name="slot_label">Yuva %1$d</string>
+    <string name="not_configured">Yapılandırılmadı</string>
+    <string name="diagnostic_btn">RTSP DİYAGNOSTİK TESTİ</string>
+
+    <string name="slot_setup_title">YUVA %1$d KURULUMU</string>
+    <string name="delete_camera">Kamerayı Sil</string>
+    <string name="delete_confirm_msg">Bu kamerayı silmek istediğinizden emin misiniz?</string>
+    <string name="credentials_fill_warning">Hepsine uygulamak için kullanıcı adı ve şifreyi doldurun</string>
+    <string name="credentials_applied_msg">Kimlik bilgileri tüm kameralara uygulandı</string>
+    <string name="fill_details_warning">Lütfen önce IP, Kullanıcı Adı ve Şifreyi doldurun</string>
+    <string name="onvif_scanning_msg">ONVIF üzerinden derinlemesine tarama yapılıyor...\nLütfen bekleyin.</string>
+    <string name="onvif_success_msg">BAŞARILI: %1$s tanımlandı ve yayın standartlaştırıldı.</string>
+    <string name="onvif_fail_msg">ONVIF Keşfi Başarısız Oldu.</string>
+    <string name="select_brand">Marka Seçin</string>
+    <string name="brand_label">Marka: %1$s</string>
+    <string name="cam_slot_saved">Kamera Yuvası %1$d Kaydedildi</string>
+    <string name="enter_ip_warning">Lütfen IP adresini girin</string>
+    <string name="add_selected_btn">SEÇİLENLERİ EKLE (%1$d)</string>
+    <string name="camera_credentials">Kamera Bilgileri</string>
+    <string name="add">EKLE</string>
+    <string name="camera_deleted">Kamera Silindi</string>
+
+    <string name="user_label">KULLANICI</string>
+    <string name="pass_label">ŞİFRE</string>
+    <string name="fix_btn">DÜZELT / OTOMATİK ONAR</string>
+    <string name="template_btn">ŞABLONDAN OLUŞTUR</string>
+    <string name="main_rtsp_label">ANA YAYIN RTSP URL</string>
+    <string name="sub_rtsp_label">ALT YAYIN RTSP URL</string>
+    <string name="ptz_enabled_label">PTZ Desteği Etkin</string>
+    <string name="save_btn">KAMERAYI KAYDET</string>
+    <string name="clear_btn">SİL / YUVAYI TEMİZLE</string>
+    <string name="apply_all_btn">Kullanıcı/Şifreyi tüm kameralara uygula</string>
+    <string name="zoom_label">YAKINLAŞTIR</string>
 
     <!-- Status & Overlays -->
     <string name="waiting_network">Ağ Bağlantısı Bekleniyor...</string>
@@ -26,6 +68,8 @@
     <string name="ptz_mode">PTZ KONTROLÜ</string>
     <string name="digital_zoom_mode">DİJİTAL YAKINLAŞTIRMA MODU</string>
     <string name="zoom_level">Yakınlaştırma: x%1$.1f</string>
+    <string name="tour">DEVRİYE</string>
+    <string name="settings">AYARLAR</string>
     <string name="page_format">Sayfa %1$d/%2$d</string>
     <string name="connection_lost_retry">Bağlantı Koptu - Deneniyor...</string>
 
@@ -39,6 +83,9 @@
     <string name="confirm">Onayla</string>
     <string name="cancel">İptal</string>
     <string name="select_camera">Bir Kamera Seçin</string>
+    <string name="select_language">Dil Seçin / Select Language</string>
+    <string name="english">English (İngilizce)</string>
+    <string name="turkish">Türkçe (Turkish)</string>
 
     <!-- Toasts & Feedback -->
     <string name="press_back_exit">Çıkmak için tekrar geri basın</string>

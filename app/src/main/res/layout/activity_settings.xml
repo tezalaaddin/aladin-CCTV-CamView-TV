@@ -1,114 +1,181 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#121212"
-    android:padding="24dp">
+    android:background="#121212">
 
-    <TextView
-        android:id="@+id/settings_title"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="CCTV DASHBOARD"
-        android:textColor="@color/brand_orange"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_scan"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:text="SCAN NETWORK"
-        android:backgroundTint="#2E7D32"
-        app:icon="@android:drawable/ic_menu_search"
-        app:layout_constraintBottom_toBottomOf="@id/settings_title"
-        app:layout_constraintStart_toEndOf="@id/settings_title"
-        app:layout_constraintTop_toTopOf="@id/settings_title" />
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/settings_recycler_view"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="24dp"
-        android:clipToPadding="false"
-        app:layout_constraintBottom_toTopOf="@id/bottom_panel"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/settings_title" />
-
-    <com.google.android.material.card.MaterialCardView
-        android:id="@+id/bottom_panel"
+    <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        app:cardBackgroundColor="#1F1F1F"
-        app:cardCornerRadius="12dp"
-        app:layout_constraintBottom_toBottomOf="parent">
+        android:background="@android:color/transparent"
+        app:elevation="0dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:padding="16dp">
+            android:padding="24dp">
 
-            <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/pin_layout"
-                style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
-                android:layout_width="150dp"
+            <TextView
+                android:id="@+id/settings_title"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:hint="APP PIN"
-                android:textColorHint="#80FFFFFF"
-                app:boxStrokeColor="@color/white"
+                android:text="@string/cctv_dashboard"
+                android:textColor="@color/brand_orange"
+                android:textSize="28sp"
+                android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/app_pin"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:inputType="numberPassword"
-                    android:maxLength="4"
-                    android:textColor="@color/white" />
-            </com.google.android.material.textfield.TextInputLayout>
-
-            <CheckBox
-                android:id="@+id/check_offline_alarm"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:text="ENABLE OFFLINE ALARM"
-                android:textColor="@color/white"
-                app:layout_constraintBottom_toBottomOf="@id/pin_layout"
-                app:layout_constraintStart_toEndOf="@id/pin_layout"
-                app:layout_constraintTop_toTopOf="@id/pin_layout" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_export"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:text="EXPORT"
-                android:textColor="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@id/btn_import"
                 app:layout_constraintTop_toTopOf="parent" />
 
             <com.google.android.material.button.MaterialButton
-                android:id="@+id/btn_import"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                android:id="@+id/btn_scan"
+                style="@style/Widget.MaterialComponents.Button.Icon"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="IMPORT"
-                android:textColor="@color/white"
-                app:layout_constraintBottom_toBottomOf="parent"
+                android:backgroundTint="#2E7D32"
+                android:text="@string/scan_network_btn"
+                android:textAllCaps="false"
+                app:cornerRadius="8dp"
+                app:icon="@android:drawable/ic_menu_search"
+                app:layout_constraintBottom_toBottomOf="@id/settings_title"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toTopOf="@id/settings_title" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
-    </com.google.android.material.card.MaterialCardView>
+    </com.google.android.material.appbar.AppBarLayout>
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingBottom="120dp"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingHorizontal="16dp">
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/settings_recycler_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:nestedScrollingEnabled="false" />
+
+            <com.google.android.material.card.MaterialCardView
+                android:id="@+id/bottom_panel"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginBottom="24dp"
+                app:cardBackgroundColor="#1F1F1F"
+                app:cardCornerRadius="16dp"
+                app:strokeColor="#33FFFFFF"
+                app:strokeWidth="1dp">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:padding="20dp">
+
+                    <com.google.android.material.textfield.TextInputLayout
+                        android:id="@+id/pin_layout"
+                        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:hint="@string/app_pin_label"
+                        android:textColorHint="#80FFFFFF"
+                        app:boxStrokeColor="@color/brand_orange"
+                        app:layout_constraintEnd_toStartOf="@+id/check_offline_alarm"
+                        app:layout_constraintHorizontal_weight="1"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <com.google.android.material.textfield.TextInputEditText
+                            android:id="@+id/app_pin"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:gravity="center"
+                            android:inputType="numberPassword"
+                            android:letterSpacing="0.5"
+                            android:maxLength="4"
+                            android:textColor="@color/white"
+                            android:textSize="18sp" />
+                    </com.google.android.material.textfield.TextInputLayout>
+
+                    <CheckBox
+                        android:id="@+id/check_offline_alarm"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:text="@string/offline_alarm"
+                        android:textColor="@color/white"
+                        app:layout_constraintBottom_toBottomOf="@id/pin_layout"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintHorizontal_weight="1.2"
+                        app:layout_constraintStart_toEndOf="@id/pin_layout"
+                        app:layout_constraintTop_toTopOf="@id/pin_layout" />
+
+                    <LinearLayout
+                        android:id="@+id/button_layout"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="20dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintTop_toBottomOf="@id/pin_layout">
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_export"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:text="@string/export_btn"
+                            android:textColor="@color/white"
+                            app:cornerRadius="8dp"
+                            app:strokeColor="#4DFFFFFF" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_import"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/import_btn"
+                            android:textColor="@color/white"
+                            app:cornerRadius="8dp"
+                            app:strokeColor="#4DFFFFFF" />
+                    </LinearLayout>
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_language"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="16dp"
+                            android:text="@string/select_language"
+                            android:textColor="@color/white"
+                            app:cornerRadius="8dp"
+                            app:strokeColor="#4DFFFFFF"
+                            app:layout_constraintTop_toBottomOf="@id/button_layout" />
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </com.google.android.material.card.MaterialCardView>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btn_diagnostic"
+                style="@style/Widget.MaterialComponents.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:text="@string/diagnostic_btn"
+                android:textColor="#44FFFFFF"
+                android:textSize="10sp" />
+
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
+

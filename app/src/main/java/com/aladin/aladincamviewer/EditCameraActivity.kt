@@ -1,6 +1,8 @@
 package com.aladin.aladincamviewer
 
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -23,6 +25,7 @@ class EditCameraActivity : AppCompatActivity() {
     private lateinit var etSub: EditText
     private lateinit var cbPtz: CheckBox
     private lateinit var btnBrand: Button
+    private lateinit var btnDelete: Button
 
     private val viewModel: EditCameraViewModel by viewModels()
 
@@ -37,9 +40,10 @@ class EditCameraActivity : AppCompatActivity() {
         val preBrand = intent.getStringExtra("prefilled_brand")
         prefilledUuid = intent.getStringExtra("prefilled_uuid") ?: ""
 
-        findViewById<TextView>(R.id.edit_title).text = getString(R.string.cam_label, displayOrder)
+        findViewById<TextView>(R.id.edit_title).text = getString(R.string.slot_setup_title, displayOrder)
 
         btnBrand = findViewById(R.id.btn_select_brand)
+        btnDelete = findViewById(R.id.btn_delete_camera)
         etIp = findViewById(R.id.et_ip)
         etUser = findViewById(R.id.et_user)
         etPass = findViewById(R.id.et_pass)
@@ -48,10 +52,11 @@ class EditCameraActivity : AppCompatActivity() {
         cbPtz = findViewById(R.id.cb_ptz)
 
         if (cameraId != 0) {
+            btnDelete.visibility = View.VISIBLE
             lifecycleScope.launch {
                 viewModel.getCameraById(cameraId)?.let { camera ->
                     selectedBrand = camera.brand
-                    btnBrand.text = "Brand: $selectedBrand"
+                    btnBrand.text = getString(R.string.brand_label, selectedBrand)
                     etIp.setText(camera.ipAddress)
                     etUser.setText(camera.username)
                     etPass.setText(camera.password)
@@ -64,10 +69,11 @@ class EditCameraActivity : AppCompatActivity() {
         } else if (preIp != null) {
             etIp.setText(preIp)
             selectedBrand = preBrand ?: "Custom"
-            btnBrand.text = "Brand: $selectedBrand"
+            btnBrand.text = getString(R.string.brand_label, selectedBrand)
         }
 
         btnBrand.setOnClickListener { showBrandPicker() }
+        btnDelete.setOnClickListener { confirmDelete() }
         findViewById<Button>(R.id.btn_apply_template).setOnClickListener { generateUrls() }
         findViewById<Button>(R.id.btn_save_camera).setOnClickListener { saveAndExit() }
         findViewById<Button>(R.id.btn_fix_camera).setOnClickListener { fixCameraViaOnvif() }
@@ -75,22 +81,40 @@ class EditCameraActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_apply_to_all)?.setOnClickListener { applyCommonSettingsToAll() }
     }
 
+    private fun confirmDelete() {
+        AlertDialog.Builder(this)
+            .setTitle(R.string.delete_camera)
+            .setMessage(R.string.delete_confirm_msg)
+            .setPositiveButton(R.string.delete_camera) { _, _ ->
+                lifecycleScope.launch {
+                    val camera = viewModel.getCameraById(cameraId)
+                    if (camera != null) {
+                        viewModel.deleteCamera(camera)
+                        Toast.makeText(this@EditCameraActivity, getString(R.string.camera_deleted), Toast.LENGTH_SHORT).show()
+                        finish()
+                    }
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
+
     private fun applyCommonSettingsToAll() {
         val user = etUser.text.toString().trim()
         val pass = etPass.text.toString().trim()
         
         if (user.isEmpty() || pass.isEmpty()) {
-            Toast.makeText(this, "Fill username/password to apply to all", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.credentials_fill_warning), Toast.LENGTH_SHORT).show()
             return
         }
 
         lifecycleScope.launch {
-            val allCams = viewModel.getAllCameras() // Need to add this to ViewModel
+            val allCams = viewModel.getAllCameras()
             val updatedCams = allCams.map { 
                 it.copy(username = user, password = pass)
             }
             updatedCams.forEach { viewModel.saveCamera(it) }
-            Toast.makeText(this@EditCameraActivity, "Credentials applied to all cameras", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@EditCameraActivity, getString(R.string.credentials_applied_msg), Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -100,21 +124,48 @@ class EditCameraActivity : AppCompatActivity() {
         val pass = etPass.text.toString().trim()
 
         if (ip.isEmpty() || user.isEmpty() || pass.isEmpty()) {
-            Toast.makeText(this, "Please fill IP, Username and Password first", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.fill_details_warning), Toast.LENGTH_SHORT).show()
             return
         }
 
-        val camera = CameraModel("Temp", "", "", ip, false, user, pass, selectedBrand)
-        CameraConfigManager(camera).optimizeForTV()
-        Toast.makeText(this, "Optimization command sent via ONVIF", Toast.LENGTH_LONG).show()
+        val progressDialog = AlertDialog.Builder(this)
+            .setMessage(R.string.onvif_scanning_msg)
+            .setCancelable(false)
+            .show()
+
+        lifecycleScope.launch {
+            val manager = OnvifManager(ip, user, pass)
+            val details = manager.getDeviceDetails()
+            
+            if (details != null) {
+                // Try to standardize settings to fix "sprop-vps" without changing codec
+                val optSuccess = manager.standardizeEncoderSettings()
+                Log.d("ALADIN_DEBUG", "Encoder Standardization result: $optSuccess")
+
+                selectedBrand = details.manufacturer ?: selectedBrand
+                btnBrand.text = getString(R.string.brand_label, selectedBrand)
+                
+                if (details.mainStreamUrl != null) etMain.setText(details.mainStreamUrl)
+                if (details.subStreamUrl != null) etSub.setText(details.subStreamUrl)
+                cbPtz.isChecked = details.ptzSupported
+                
+                progressDialog.dismiss()
+                
+                val msg = getString(R.string.onvif_success_msg, details.manufacturer ?: "Camera")
+                Toast.makeText(this@EditCameraActivity, msg, Toast.LENGTH_LONG).show()
+            } else {
+                progressDialog.dismiss()
+                Toast.makeText(this@EditCameraActivity, getString(R.string.onvif_fail_msg), Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     private fun showBrandPicker() {
         AlertDialog.Builder(this)
-            .setTitle("Select Brand")
+            .setTitle(R.string.select_brand)
             .setItems(brands.toTypedArray()) { _, which ->
                 selectedBrand = brands[which]
-                btnBrand.text = "Brand: $selectedBrand"
+                btnBrand.text = getString(R.string.brand_label, selectedBrand)
             }
             .show()
     }
@@ -125,7 +176,7 @@ class EditCameraActivity : AppCompatActivity() {
         val pass = etPass.text.toString().trim()
 
         if (ip.isEmpty()) {
-            Toast.makeText(this, "Please enter IP address", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, getString(R.string.enter_ip_warning), Toast.LENGTH_SHORT).show()
             return
         }
 
@@ -174,7 +225,7 @@ class EditCameraActivity : AppCompatActivity() {
             )
             viewModel.saveCamera(camera)
             
-            Toast.makeText(this@EditCameraActivity, "Camera $displayOrder Updated", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this@EditCameraActivity, getString(R.string.cam_slot_saved, displayOrder), Toast.LENGTH_SHORT).show()
             finish()
         }
     }

@@ -15,22 +15,28 @@ import java.util.*
 import java.util.regex.Pattern
 
 /**
- * Advanced ONVIF PTZ Manager with Dynamic Profile and Port Discovery.
- * Works with Tiandy, AJCloud, Hikvision, and Dahua.
+ * Advanced ONVIF PTZ Manager.
+ * Supports 8-way movement and optical zoom.
  */
 class PtzManager(private val camera: CameraModel) {
 
     private val TAG = "PtzManager"
     private val scope = CoroutineScope(Dispatchers.IO)
     private var cachedProfileToken: String? = null
-    private var cachedMediaUri: String? = null
     private var cachedPtzUri: String? = null
     private var actualPort: Int? = null
 
+    // 8-Way Movement
     fun moveUp() = executePtz { token -> getContinuousMoveEnvelope(token, 0.0f, 1.0f) }
     fun moveDown() = executePtz { token -> getContinuousMoveEnvelope(token, 0.0f, -1.0f) }
     fun moveLeft() = executePtz { token -> getContinuousMoveEnvelope(token, -1.0f, 0.0f) }
     fun moveRight() = executePtz { token -> getContinuousMoveEnvelope(token, 1.0f, 0.0f) }
+    fun moveUpLeft() = executePtz { token -> getContinuousMoveEnvelope(token, -1.0f, 1.0f) }
+    fun moveUpRight() = executePtz { token -> getContinuousMoveEnvelope(token, 1.0f, 1.0f) }
+    fun moveDownLeft() = executePtz { token -> getContinuousMoveEnvelope(token, -1.0f, -1.0f) }
+    fun moveDownRight() = executePtz { token -> getContinuousMoveEnvelope(token, 1.0f, -1.0f) }
+
+    // Zoom
     fun zoomIn() = executePtz { token -> getContinuousZoomEnvelope(token, 1.0f) }
     fun zoomOut() = executePtz { token -> getContinuousZoomEnvelope(token, -1.0f) }
 
@@ -49,135 +55,87 @@ class PtzManager(private val camera: CameraModel) {
     private fun executePtz(envelopeProvider: (String) -> String) {
         scope.launch {
             try {
-                if (cachedProfileToken == null) {
-                    discoverServicesAndToken()
-                }
-                
+                if (cachedProfileToken == null) discoverServicesAndToken()
                 val token = cachedProfileToken ?: return@launch
                 val ptzUri = cachedPtzUri ?: "/onvif/ptz_service"
-                val body = envelopeProvider(token)
-                
-                executeSoapRequest(createSoapEnvelope(body), ptzUri)
+                executeSoapRequest(createSoapEnvelope(envelopeProvider(token)), ptzUri)
             } catch (e: Exception) {
-                Log.e(TAG, "PTZ execution failed", e)
+                Log.e(TAG, "PTZ Error", e)
             }
         }
     }
 
     private suspend fun discoverServicesAndToken() = withContext(Dispatchers.IO) {
-        // If IP already contains a port, don't probe
-        val ports = if (camera.ipAddress.contains(":")) emptyList() else listOf(80, 8899, 8000, 8080)
         val baseIp = camera.ipAddress.substringBefore(":")
-        
-        // 1. Try to find the ONVIF port and GetCapabilities
-        val paths = listOf("/onvif/device_service", "/device_service", "/onvif/device", "/onvif/media_service")
-        
-        var foundRes: String? = null
-        var workingPort: Int? = null
-        var workingPath: String? = null
+        val ports = listOf(80, 8899, 8000, 8080)
+        val paths = listOf("/onvif/device_service", "/device_service")
 
-        val testPorts = if (ports.isEmpty()) listOf(-1) else ports
-        
-        outer@for (p in testPorts) {
-            val host = if (p == -1) camera.ipAddress else "$baseIp:$p"
+        outer@for (p in ports) {
             for (path in paths) {
                 try {
                     val capSoap = createSoapEnvelope("<tds:GetCapabilities xmlns:tds=\"http://www.onvif.org/ver10/device/wsdl\"><tds:Category>All</tds:Category></tds:GetCapabilities>")
-                    val res = rawSoapRequest("http://$host$path", capSoap)
+                    val res = rawSoapRequest("http://$baseIp:$p$path", capSoap)
                     if (res != null) {
-                        foundRes = res
-                        workingPort = if (p == -1) null else p
-                        workingPath = path
-                        actualPort = workingPort
-                        Log.d(TAG, "Discovered working ONVIF endpoint: http://$host$path")
+                        actualPort = p
+                        cachedPtzUri = extractXAddr(res, "PTZ")
+                        val mediaUri = extractXAddr(res, "Media")
+                        
+                        if (mediaUri != null) {
+                            val getProfilesSoap = createSoapEnvelope("<trt:GetProfiles xmlns:trt=\"http://www.onvif.org/ver10/media/wsdl\"/>")
+                            val profRes = rawSoapRequest(mediaUri, getProfilesSoap)
+                            if (profRes != null) {
+                                val m = Pattern.compile("token=\"([^\"]+)\"").matcher(profRes)
+                                if (m.find()) cachedProfileToken = m.group(1)
+                            }
+                        }
                         break@outer
                     }
                 } catch (e: Exception) { continue }
             }
         }
-
-        if (foundRes == null) return@withContext
-
-        // 2. Extract Media and PTZ XAddrs
-        cachedMediaUri = extractXAddr(foundRes, "Media") ?: workingPath
-        cachedPtzUri = extractXAddr(foundRes, "PTZ") ?: workingPath
-        
-        Log.d(TAG, "Discovered Media Service: $cachedMediaUri")
-        Log.d(TAG, "Discovered PTZ Service: $cachedPtzUri")
-
-        // 3. Get Profiles to find token
-        val getProfilesSoap = createSoapEnvelope("<trt:GetProfiles xmlns:trt=\"http://www.onvif.org/ver10/media/wsdl\"/>")
-        val profilesRes = rawSoapRequest(cachedMediaUri!!, getProfilesSoap)
-        if (profilesRes != null) {
-            val pattern = Pattern.compile("token=\"([^\"]+)\"")
-            val matcher = pattern.matcher(profilesRes)
-            if (matcher.find()) {
-                cachedProfileToken = matcher.group(1)
-                Log.d(TAG, "Discovered Profile Token: $cachedProfileToken")
-            }
-        }
     }
 
     private fun extractXAddr(xml: String, type: String): String? {
-        val pattern = Pattern.compile("<tt:$type>.*?<tt:XAddr>(.*?)</tt:XAddr>", Pattern.DOTALL)
-        val matcher = pattern.matcher(xml)
-        return if (matcher.find()) matcher.group(1) else null
+        val m = Pattern.compile("<tt:$type>.*?<tt:XAddr>(.*?)</tt:XAddr>", Pattern.DOTALL).matcher(xml)
+        return if (m.find()) m.group(1) else null
     }
 
     private fun rawSoapRequest(urlStr: String, soap: String): String? {
-        try {
-            val url = if (urlStr.startsWith("http")) URL(urlStr) else {
-                val host = if (actualPort != null && !camera.ipAddress.contains(":")) {
-                    "${camera.ipAddress.substringBefore(":")}:$actualPort"
-                } else {
-                    camera.ipAddress
-                }
-                URL("http://$host$urlStr")
-            }
-            
+        return try {
+            val url = URL(if (urlStr.startsWith("http")) urlStr else "http://${camera.ipAddress.substringBefore(":")}:$actualPort$urlStr")
             val conn = url.openConnection() as HttpURLConnection
             conn.requestMethod = "POST"
             conn.doOutput = true
-            conn.connectTimeout = 2000
-            conn.readTimeout = 2000
+            conn.connectTimeout = 3000
             conn.setRequestProperty("Content-Type", "application/soap+xml; charset=utf-8")
             OutputStreamWriter(conn.outputStream).use { it.write(soap) }
-            
-            if (conn.responseCode == 200) {
-                return conn.inputStream.bufferedReader().use { it.readText() }
-            }
-        } catch (e: Exception) { 
-            Log.w(TAG, "SOAP request failed for $urlStr: ${e.message}")
-        }
-        return null
+            if (conn.responseCode == 200) conn.inputStream.bufferedReader().use { it.readText() } else null
+        } catch (e: Exception) { null }
     }
 
-    private fun executeSoapRequest(soap: String, uri: String): String? {
-        return rawSoapRequest(uri, soap)
-    }
+    private fun executeSoapRequest(soap: String, uri: String) = rawSoapRequest(uri, soap)
 
     private fun getContinuousMoveEnvelope(token: String, x: Float, y: Float) = """
         <tptz:ContinuousMove xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl" xmlns:tt="http://www.onvif.org/ver10/schema">
             <tptz:ProfileToken>$token</tptz:ProfileToken>
-            <tptz:Velocity>
-                <tt:PanTilt x="$x" y="$y"/>
-            </tptz:Velocity>
+            <tptz:Velocity><tt:PanTilt x="$x" y="$y"/></tptz:Velocity>
         </tptz:ContinuousMove>
     """.trimIndent()
 
     private fun getContinuousZoomEnvelope(token: String, z: Float) = """
         <tptz:ContinuousMove xmlns:tptz="http://www.onvif.org/ver20/ptz/wsdl" xmlns:tt="http://www.onvif.org/ver10/schema">
             <tptz:ProfileToken>$token</tptz:ProfileToken>
-            <tptz:Velocity>
-                <tt:Zoom x="$z"/>
-            </tptz:Velocity>
+            <tptz:Velocity><tt:Zoom x="$z"/></tptz:Velocity>
         </tptz:ContinuousMove>
     """.trimIndent()
 
     private fun createSoapEnvelope(body: String): String {
-        val nonce = generateNonce()
-        val created = getUtcNow()
-        val digest = generatePasswordDigest(camera.password, nonce, created)
+        val nonce = Base64.encodeToString(ByteArray(16).also { Random().nextBytes(it) }, Base64.NO_WRAP)
+        val created = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date())
+        val digest = try {
+            val combined = Base64.decode(nonce, Base64.DEFAULT) + created.toByteArray() + camera.password.toByteArray()
+            Base64.encodeToString(MessageDigest.getInstance("SHA-1").digest(combined), Base64.NO_WRAP)
+        } catch (e: Exception) { "" }
         
         return """
             <?xml version="1.0" encoding="utf-8"?>
@@ -192,30 +150,8 @@ class PtzManager(private val camera: CameraModel) {
                         </wsse:UsernameToken>
                     </wsse:Security>
                 </s:Header>
-                <s:Body>
-                    $body
-                </s:Body>
+                <s:Body>$body</s:Body>
             </s:Envelope>
         """.trimIndent()
-    }
-
-    private fun generateNonce(): String {
-        val b = ByteArray(16)
-        Random().nextBytes(b)
-        return Base64.encodeToString(b, Base64.NO_WRAP)
-    }
-
-    private fun getUtcNow(): String {
-        val sdf = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US)
-        sdf.timeZone = TimeZone.getTimeZone("UTC")
-        return sdf.format(Date())
-    }
-
-    private fun generatePasswordDigest(password: String, nonceBase64: String, created: String): String {
-        return try {
-            val nonce = Base64.decode(nonceBase64, Base64.DEFAULT)
-            val combined = nonce + created.toByteArray() + password.toByteArray()
-            Base64.encodeToString(MessageDigest.getInstance("SHA-1").digest(combined), Base64.NO_WRAP)
-        } catch (e: Exception) { "" }
     }
 }

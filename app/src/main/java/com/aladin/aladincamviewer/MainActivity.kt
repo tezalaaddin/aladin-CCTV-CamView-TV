@@ -1,7 +1,7 @@
 package com.aladin.aladincamviewer
 
+import android.content.Context
 import android.content.Intent
-import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -34,8 +34,6 @@ class MainActivity : AppCompatActivity() {
     private val pageSize = 4
     
     private val viewModel: MainViewModel by viewModels()
-    private lateinit var networkTracker: NetworkTracker
-    
     private val clockHandler = Handler(Looper.getMainLooper())
     private val clockRunnable = object : Runnable {
         override fun run() {
@@ -45,7 +43,14 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
+    override fun attachBaseContext(newBase: Context) {
+        val lang = newBase.getSharedPreferences("aladin_prefs_v2", Context.MODE_PRIVATE)
+            .getString("app_lang", "en") ?: "en"
+        super.attachBaseContext(LocaleHelper.setLocale(newBase, lang))
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
+        setTheme(R.style.Theme_AladinCamViewer)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
@@ -69,11 +74,30 @@ class MainActivity : AppCompatActivity() {
         findViewById<View>(R.id.btn_settings_top).setOnClickListener { openSettings() }
         findViewById<View>(R.id.btn_tour_top).setOnClickListener { startTour() }
 
-        val cameraDao = AppDatabase.getDatabase(this).cameraDao()
-        networkTracker = NetworkTracker.getInstance(this, CameraRepository(cameraDao))
-        networkTracker.triggerUpdate()
-
+        checkLanguage()
         observeCameras()
+    }
+
+    private fun checkLanguage() {
+        val prefs = PreferenceHelper(this)
+        if (prefs.appLanguage.isEmpty()) {
+            showLanguagePicker()
+        }
+    }
+
+    private fun showLanguagePicker() {
+        val languages = arrayOf("English", "Türkçe")
+        val codes = arrayOf("en", "tr")
+        
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle("Select Language / Dil Seçin")
+            .setCancelable(false)
+            .setItems(languages) { _, which ->
+                val prefs = PreferenceHelper(this)
+                prefs.appLanguage = codes[which]
+                recreate()
+            }
+            .show()
     }
 
     private fun observeCameras() {
@@ -90,7 +114,7 @@ class MainActivity : AppCompatActivity() {
             if (success) {
                 startActivity(Intent(this, SettingsActivity::class.java))
             } else {
-                Toast.makeText(this, getString(R.string.access_denied), Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, "Access Denied", Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -99,7 +123,6 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = null
         val intent = Intent(this, FullScreenCameraActivity::class.java).apply {
             putExtra("tour_mode", true)
-            // Need to convert CameraEntity to CameraModel or update FullScreenCameraActivity
             putParcelableArrayListExtra("camera_list", ArrayList(currentCameras.map { it.toModel() }))
         }
         startActivity(intent)
@@ -114,7 +137,7 @@ class MainActivity : AppCompatActivity() {
         
         recyclerView.adapter = CameraAdapter(pageItems)
         val totalPages = (currentCameras.size + pageSize - 1) / pageSize
-        pageIndicator.text = getString(R.string.page_format, currentPage + 1, totalPages)
+        pageIndicator.text = "Page ${currentPage + 1}/$totalPages"
 
         if (focusIndex != -1) {
             recyclerView.post {
@@ -123,7 +146,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    // Extension to convert Entity to Model for UI/ExoPlayer
     private fun CameraEntity.toModel() = CameraModel(
         name = name,
         mainStreamUrl = mainStreamUrl,
@@ -141,23 +163,6 @@ class MainActivity : AppCompatActivity() {
             return true
         }
 
-        // Snapshot with Yellow/Record button
-        if (keyCode == KeyEvent.KEYCODE_PROG_YELLOW || keyCode == KeyEvent.KEYCODE_MEDIA_RECORD || keyCode == KeyEvent.KEYCODE_S) {
-            currentFocus?.let { focusedView ->
-                val containingView = recyclerView.findContainingItemView(focusedView)
-                if (containingView != null) {
-                    val pos = recyclerView.getChildAdapterPosition(containingView)
-                    if (pos != -1) {
-                        val cam = currentCameras.subList(currentPage * pageSize, currentCameras.size)[pos]
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                            SnapshotUtils.takeSnapshot(containingView, cam.name)
-                        }
-                    }
-                }
-            }
-            return true
-        }
-
         val focusedView = currentFocus
         val position = if (focusedView != null) {
             val containingView = recyclerView.findContainingItemView(focusedView)
@@ -166,44 +171,20 @@ class MainActivity : AppCompatActivity() {
 
         when (keyCode) {
             KeyEvent.KEYCODE_DPAD_RIGHT -> {
-                if (position == 1 || position == 3) {
-                    if ((currentPage + 1) * pageSize < currentCameras.size) {
-                        currentPage++
-                        displayCurrentPage(focusIndex = position - 1)
-                        return true
-                    }
+                if ((position == 1 || position == 3) && (currentPage + 1) * pageSize < currentCameras.size) {
+                    currentPage++
+                    displayCurrentPage(focusIndex = position - 1)
+                    return true
                 }
             }
             KeyEvent.KEYCODE_DPAD_LEFT -> {
-                if (position == 0 || position == 2) {
-                    if (currentPage > 0) {
-                        currentPage--
-                        displayCurrentPage(focusIndex = position + 1)
-                        return true
-                    }
-                }
-            }
-            KeyEvent.KEYCODE_MEDIA_NEXT -> {
-                if ((currentPage + 1) * pageSize < currentCameras.size) {
-                    currentPage++
-                    displayCurrentPage()
-                    return true
-                }
-            }
-            KeyEvent.KEYCODE_MEDIA_PREVIOUS -> {
-                if (currentPage > 0) {
+                if ((position == 0 || position == 2) && currentPage > 0) {
                     currentPage--
-                    displayCurrentPage()
+                    displayCurrentPage(focusIndex = position + 1)
                     return true
                 }
             }
         }
-        
-        if (keyCode == KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE || keyCode == KeyEvent.KEYCODE_P) {
-            startTour()
-            return true
-        }
-
         return super.onKeyDown(keyCode, event)
     }
 
@@ -235,19 +216,8 @@ class MainActivity : AppCompatActivity() {
             }
             return
         } else {
-            Toast.makeText(this, getString(R.string.press_back_exit), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show()
         }
         backPressedTime = System.currentTimeMillis()
-    }
-
-    override fun onTrimMemory(level: Int) {
-        super.onTrimMemory(level)
-        if (level >= TRIM_MEMORY_RUNNING_CRITICAL) {
-            recyclerView.adapter = null
-            System.gc()
-            Handler(Looper.getMainLooper()).postDelayed({
-                if (!isFinishing) displayCurrentPage()
-            }, 2000)
-        }
     }
 }

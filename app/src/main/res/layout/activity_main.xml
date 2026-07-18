@@ -57,7 +57,7 @@
                     style="@style/Widget.MaterialComponents.Button.TextButton.Icon"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="TOUR"
+                    android:text="@string/tour"
                     android:textColor="@color/white"
                     app:icon="@android:drawable/ic_media_play"
                     app:iconTint="@color/white" />
@@ -68,7 +68,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
-                    android:text="SETTINGS"
+                    android:text="@string/settings"
                     android:textColor="@color/white"
                     app:icon="@android:drawable/ic_menu_preferences"
                     app:iconTint="@color/white" />
@@ -93,7 +93,6 @@
                         android:id="@+id/page_indicator"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="PAGE 1/4"
                         android:textColor="#80FFFFFF"
                         android:textSize="12sp" />
                 </LinearLayout>

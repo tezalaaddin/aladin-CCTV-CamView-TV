@@ -33,12 +33,19 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:theme="@style/Theme.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
                 <category android:name="android.intent.category.LEANBACK_LAUNCHER" />
             </intent-filter>
+        </activity>
+
+        <activity
+            android:name=".DiagnosticActivity"
+            android:exported="true"
+            android:theme="@style/Theme.MaterialComponents.DayNight.NoActionBar">
         </activity>
 
         <activity
@@ -60,13 +67,13 @@
         <activity
             android:name=".EditCameraActivity"
             android:label="Configure Camera"
-            android:screenOrientation="landscape"
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout"
             android:windowSoftInputMode="adjustResize" />
 
         <activity
             android:name=".DiscoveryActivity"
             android:label="Discover Cameras"
-            android:screenOrientation="landscape" />
+            android:configChanges="orientation|screenSize|smallestScreenSize|screenLayout" />
 
         <receiver
             android:name=".BootReceiver"

@@ -13,8 +13,8 @@ android {
         applicationId = "com.aladin.aladincamviewer"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1"
+        versionCode = 3
+        versionName = "1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -43,7 +43,7 @@ dependencies {
     implementation("androidx.core:core-ktx:1.13.1")
     implementation(libs.material)
 
-    // Media3 dependencies
+    // Media3 dependencies (Stable)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.exoplayer.rtsp)
     implementation(libs.androidx.media3.ui)
@@ -63,6 +63,12 @@ dependencies {
 
     // Security
     implementation(libs.androidx.security.crypto)
+
+    // LibVLC for robust RTSP (Fixes Redline/Aselsan metadata issues)
+    implementation("org.videolan.android:libvlc-all:3.6.5")
+
+    // Networking
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
