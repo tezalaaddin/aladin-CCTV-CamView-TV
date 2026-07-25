@@ -311,13 +311,20 @@ class HybridScanner(private val context: Context) {
     }
 
     private fun extractUuid(response: String): String? {
-        // Robust UUID extraction handling various formats (uuid:..., urn:uuid:...)
-        val matcher = Pattern.compile("<(?:[a-zA-Z0-9]+:)?Address>(urn:uuid:|uuid:)?([^<]+)</(?:[a-zA-Z0-9]+:)?Address>", Pattern.CASE_INSENSITIVE).matcher(response)
-        return if (matcher.find()) {
-            val prefix = matcher.group(1) ?: "uuid:"
-            val value = matcher.group(2)
-            if (prefix.contains("urn")) "uuid:$value" else "$prefix$value"
-        } else null
+        val matcher = Pattern.compile(
+            "<(?:[a-zA-Z0-9]+:)?Address>([^<]+)</(?:[a-zA-Z0-9]+:)?Address>",
+            Pattern.CASE_INSENSITIVE
+        ).matcher(response)
+        while (matcher.find()) {
+            val candidate = matcher.group(1)
+                ?.trim()
+                ?.removePrefix("urn:uuid:")
+                ?.removePrefix("uuid:")
+                ?: continue
+            val canonical = runCatching { UUID.fromString(candidate).toString() }.getOrNull()
+            if (canonical != null) return "uuid:$canonical"
+        }
+        return null
     }
 
     private fun parseOnvifPacket(response: String, device: DiscoveryDevice) {

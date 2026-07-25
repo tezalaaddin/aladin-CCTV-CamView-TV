@@ -28,4 +28,7 @@ class CameraRepository(private val cameraDao: CameraDao) {
     suspend fun getCameraById(id: Int): CameraEntity? {
         return cameraDao.getCameraById(id)
     }
+
+    suspend fun isIpAlreadyUsed(ipAddress: String, excludeId: Int = 0): Boolean =
+        cameraDao.countByIp(ipAddress.trim(), excludeId) > 0
 }

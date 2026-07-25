@@ -23,7 +23,7 @@ import java.util.regex.Pattern
  */
 class PtzManager(private val camera: CameraModel) {
 
-    private val TAG = "PtzManager"
+    private val TAG = "ALADIN_PTZ"
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var cachedProfileToken: String? = null
     private var cachedPtzUri: String? = null

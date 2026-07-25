@@ -2,6 +2,7 @@ package com.aladin.aladincamviewer
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -119,6 +120,11 @@ class DiscoveryActivity : AppCompatActivity() {
 
                 launch(supervisor) {
                     runCatching {
+                        if (repository.isIpAlreadyUsed(device.ip)) {
+                            Log.w("ALADIN_DISCOVERY", "Duplicate camera skipped ip=${device.ip}")
+                            withContext(Dispatchers.Main) { device.isAdded = true }
+                            return@runCatching
+                        }
                         val camera = CameraEntity(
                             name = "Cam $nextSlot",
                             ipAddress = device.ip,

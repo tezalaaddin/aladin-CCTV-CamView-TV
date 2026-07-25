@@ -111,4 +111,9 @@
     <string name="import_success">Import Successful. Restarting...</string>
     <string name="import_failed">Import Failed</string>
     <string name="failed_reconnect_attempts">Failed to connect after multiple attempts</string>
+    <string name="camera_ip_change_found">Camera IP Change Found</string>
+    <string name="camera_ip_change_confirm">%1$s is not reachable at %2$s. A compatible camera was found at %3$s (MAC: %4$s). Use this address for the saved camera?</string>
+    <string name="use_new_camera_ip">USE NEW IP</string>
+    <string name="unknown_value">Unknown</string>
+    <string name="duplicate_camera_ip">A camera with this IP address is already registered.</string>
 </resources>

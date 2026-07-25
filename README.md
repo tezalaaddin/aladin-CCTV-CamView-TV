@@ -40,6 +40,20 @@ contains large native codec libraries, so installing the APK that matches the TV
 avoids shipping both architectures to every device. Most current Android TVs use
 `arm64-v8a`; `adb shell getprop ro.product.cpu.abi` shows the device ABI.
 
+### Focused development logs
+
+To show only Aladin diagnostics, crashes, network recovery and playback events:
+
+```powershell
+.\scripts\logcat-aladin.ps1 -Device 192.168.1.54:5555
+```
+
+The equivalent direct ADB filter is:
+
+```text
+adb logcat -s ALADIN_VLC:V ALADIN_NETWORK:V ALADIN_NETWORK_TRACKER:V ALADIN_DISCOVERY:V ALADIN_DEBUG_ONVIF:V ALADIN_PTZ:V ALADIN_WATCHDOG:V ALADIN_DIAG:V AndroidRuntime:E *:S
+```
+
 ## ⚙️ Configuration
 
 - **Username/Password:** Admin credentials for ONVIF/RTSP.

@@ -8,10 +8,10 @@ interface CameraDao {
     @Query("SELECT * FROM cameras ORDER BY displayOrder ASC")
     fun getAllCameras(): Flow<List<CameraEntity>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertCamera(camera: CameraEntity)
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertCameras(cameras: List<CameraEntity>)
 
     @Update
@@ -25,4 +25,7 @@ interface CameraDao {
 
     @Query("SELECT * FROM cameras WHERE id = :id")
     suspend fun getCameraById(id: Int): CameraEntity?
+
+    @Query("SELECT COUNT(*) FROM cameras WHERE ipAddress = :ipAddress AND id != :excludeId")
+    suspend fun countByIp(ipAddress: String, excludeId: Int = 0): Int
 }

@@ -17,6 +17,7 @@ class EditCameraActivity : AppCompatActivity() {
     private var cameraId = 0
     private var displayOrder = 1
     private var prefilledUuid = ""
+    private var prefilledMacAddress: String? = null
 
     private lateinit var etIp: EditText
     private lateinit var etUser: EditText
@@ -64,6 +65,7 @@ class EditCameraActivity : AppCompatActivity() {
                     etSub.setText(camera.subStreamUrl)
                     cbPtz.isChecked = camera.ptzSupported
                     prefilledUuid = camera.uuid
+                    prefilledMacAddress = camera.macAddress
                 }
             }
         } else if (preIp != null) {
@@ -221,12 +223,15 @@ class EditCameraActivity : AppCompatActivity() {
                 brand = selectedBrand,
                 ptzSupported = cbPtz.isChecked,
                 displayOrder = displayOrder,
-                uuid = prefilledUuid
+                uuid = prefilledUuid,
+                macAddress = prefilledMacAddress
             )
-            viewModel.saveCamera(camera)
-            
-            Toast.makeText(this@EditCameraActivity, getString(R.string.cam_slot_saved, displayOrder), Toast.LENGTH_SHORT).show()
-            finish()
+            if (viewModel.saveCameraChecked(camera)) {
+                Toast.makeText(this@EditCameraActivity, getString(R.string.cam_slot_saved, displayOrder), Toast.LENGTH_SHORT).show()
+                finish()
+            } else {
+                Toast.makeText(this@EditCameraActivity, R.string.duplicate_camera_ip, Toast.LENGTH_LONG).show()
+            }
         }
     }
 }

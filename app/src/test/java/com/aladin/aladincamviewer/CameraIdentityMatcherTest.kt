@@ -12,7 +12,8 @@ class CameraIdentityMatcherTest {
     )
 
     @Test fun `normalizes uuid prefixes`() {
-        assertTrue(CameraIdentityMatcher.strongMatch(camera(uuid = "uuid:ABC"), DiscoveryDevice("x", uuid = "urn:uuid:abc")))
+        val value = "48667600-1fa9-11ef-80a1-e4e66c44c852"
+        assertTrue(CameraIdentityMatcher.strongMatch(camera(uuid = "uuid:$value"), DiscoveryDevice("x", uuid = "urn:uuid:$value")))
     }
 
     @Test fun `normalizes mac separators`() {
@@ -21,6 +22,10 @@ class CameraIdentityMatcherTest {
 
     @Test fun `does not match missing identities`() {
         assertFalse(CameraIdentityMatcher.strongMatch(camera(), DiscoveryDevice("x")))
+    }
+
+    @Test fun `rejects ONVIF anonymous role as uuid`() {
+        assertFalse(CameraIdentityMatcher.isValidUuid("uuid:http://schemas.xmlsoap.org/ws/2004/08/addressing/role/anonymous"))
     }
 
     @Test fun `generic brand is compatible but different known brands are not`() {

@@ -52,9 +52,10 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             try {
                 val jsonString = inputStream.bufferedReader().use { it.readText() }
                 val config = Json.decodeFromString<ConfigModel>(jsonString)
-                
+                val uniqueCameras = config.cameras.distinctBy { it.ipAddress.trim() }
+
                 repository.deleteAll()
-                repository.insertAll(config.cameras)
+                repository.insertAll(uniqueCameras)
                 prefHelper.appPin = config.appPin
                 prefHelper.isOfflineAlarmEnabled = config.offlineAlarm
                 

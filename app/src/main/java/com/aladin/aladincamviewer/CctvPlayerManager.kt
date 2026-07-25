@@ -23,6 +23,7 @@ class CctvPlayerManager(
     private var playGeneration = 0
     private var released = false
     private var retryScheduled = false
+    private var lastBufferBucket = -1
 
     init {
         mediaPlayer?.videoScale = MediaPlayer.ScaleType.SURFACE_FILL
@@ -52,6 +53,7 @@ class CctvPlayerManager(
         currentUrl = url
         released = false
         retryScheduled = false
+        lastBufferBucket = -1
         startPlayback(url, playGeneration)
     }
 
@@ -71,8 +73,13 @@ class CctvPlayerManager(
                     notifyState(false, null)
                     mediaPlayer?.videoScale = MediaPlayer.ScaleType.SURFACE_FILL
                 }
-                MediaPlayer.Event.Buffering ->
-                    Log.d(tag, "RTSP buffering endpoint=$endpoint percent=${event.buffering}")
+                MediaPlayer.Event.Buffering -> {
+                    val bucket = (event.buffering.toInt().coerceIn(0, 100) / 25) * 25
+                    if (bucket != lastBufferBucket) {
+                        lastBufferBucket = bucket
+                        Log.d(tag, "RTSP buffering endpoint=$endpoint percent=$bucket")
+                    }
+                }
                 MediaPlayer.Event.EncounteredError ->
                     scheduleRetry(url, generation, endpoint, "decoder_or_network_error")
                 MediaPlayer.Event.EndReached ->

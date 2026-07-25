@@ -28,6 +28,12 @@ class EditCameraViewModel(application: Application) : AndroidViewModel(applicati
         }
     }
 
+    suspend fun saveCameraChecked(camera: CameraEntity): Boolean {
+        if (repository.isIpAlreadyUsed(camera.ipAddress, camera.id)) return false
+        if (camera.id == 0) repository.insert(camera) else repository.update(camera)
+        return true
+    }
+
     fun deleteCamera(camera: CameraEntity) {
         viewModelScope.launch {
             repository.delete(camera)

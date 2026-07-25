@@ -1,9 +1,11 @@
 package com.aladin.aladincamviewer
 
+import java.util.UUID
+
 object CameraIdentityMatcher {
     fun strongMatch(camera: CameraEntity, device: DiscoveryDevice): Boolean {
-        val cameraUuid = normalizeUuid(camera.uuid)
-        val deviceUuid = normalizeUuid(device.uuid)
+        val cameraUuid = canonicalUuid(camera.uuid)
+        val deviceUuid = canonicalUuid(device.uuid)
         val cameraMac = normalizeMac(camera.macAddress)
         val deviceMac = normalizeMac(device.mac)
         return (cameraUuid != null && cameraUuid == deviceUuid) ||
@@ -19,12 +21,17 @@ object CameraIdentityMatcher {
         return camera == device || camera.contains(device) || device.contains(camera)
     }
 
-    private fun normalizeUuid(value: String?): String? = value
-        ?.trim()
-        ?.lowercase()
-        ?.removePrefix("urn:")
-        ?.removePrefix("uuid:")
-        ?.takeIf { it.isNotBlank() }
+    fun isValidUuid(value: String?): Boolean = canonicalUuid(value) != null
+
+    private fun canonicalUuid(value: String?): String? {
+        val candidate = value
+            ?.trim()
+            ?.lowercase()
+            ?.removePrefix("urn:")
+            ?.removePrefix("uuid:")
+            ?: return null
+        return runCatching { UUID.fromString(candidate).toString() }.getOrNull()
+    }
 
     private fun normalizeMac(value: String?): String? = value
         ?.filter { it.isLetterOrDigit() }

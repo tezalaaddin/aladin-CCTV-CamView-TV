@@ -14,6 +14,9 @@ import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.appcompat.app.AlertDialog
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import kotlinx.coroutines.launch
@@ -27,6 +30,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var pageIndicator: TextView
     private lateinit var networkErrorLayout: LinearLayout
     private lateinit var networkMonitor: NetworkMonitor
+    private lateinit var networkTracker: NetworkTracker
+    private var recoveryDialog: AlertDialog? = null
+    private var activeRecoveryProposal: RecoveryProposal? = null
     
     private var backPressedTime: Long = 0
     private var currentCameras: List<CameraEntity> = emptyList()
@@ -70,12 +76,56 @@ class MainActivity : AppCompatActivity() {
                 networkErrorLayout.visibility = View.VISIBLE
             }
         }
+        val repository = CameraRepository(AppDatabase.getDatabase(this).cameraDao())
+        networkTracker = NetworkTracker.getInstance(applicationContext, repository)
+        observeRecoveryProposals()
 
         findViewById<View>(R.id.btn_settings_top).setOnClickListener { openSettings() }
         findViewById<View>(R.id.btn_tour_top).setOnClickListener { startTour() }
 
         checkLanguage()
         observeCameras()
+    }
+
+    private fun observeRecoveryProposals() {
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                networkTracker.recoveryProposals.collect { proposal ->
+                    showRecoveryConfirmation(proposal)
+                }
+            }
+        }
+    }
+
+    private fun showRecoveryConfirmation(proposal: RecoveryProposal) {
+        activeRecoveryProposal?.let(networkTracker::rejectRecovery)
+        recoveryDialog?.dismiss()
+        activeRecoveryProposal = proposal
+        recoveryDialog = AlertDialog.Builder(this)
+            .setTitle(R.string.camera_ip_change_found)
+            .setMessage(
+                getString(
+                    R.string.camera_ip_change_confirm,
+                    proposal.cameraName,
+                    proposal.oldIp,
+                    proposal.newIp,
+                    proposal.macAddress ?: getString(R.string.unknown_value)
+                )
+            )
+            .setPositiveButton(R.string.use_new_camera_ip) { _, _ ->
+                networkTracker.confirmRecovery(proposal)
+                activeRecoveryProposal = null
+            }
+            .setNegativeButton(R.string.cancel) { _, _ ->
+                networkTracker.rejectRecovery(proposal)
+                activeRecoveryProposal = null
+            }
+            .setOnCancelListener {
+                networkTracker.rejectRecovery(proposal)
+                activeRecoveryProposal = null
+            }
+            .create()
+        recoveryDialog?.show()
     }
 
     private fun checkLanguage() {
@@ -205,6 +255,10 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
+        activeRecoveryProposal?.let(networkTracker::rejectRecovery)
+        activeRecoveryProposal = null
+        recoveryDialog?.dismiss()
+        recoveryDialog = null
         recyclerView.adapter = null
         networkMonitor.stop()
     }

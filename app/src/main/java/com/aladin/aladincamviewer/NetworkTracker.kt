@@ -10,12 +10,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.ConcurrentHashMap
+
+data class RecoveryProposal(
+    val cameraId: Int,
+    val cameraName: String,
+    val oldIp: String,
+    val newIp: String,
+    val uuid: String?,
+    val macAddress: String?,
+    val brand: String
+)
 
 /** Recovers DHCP-changed camera addresses using persistent identity first, RTSP proof second. */
 class NetworkTracker private constructor(
@@ -39,7 +52,10 @@ class NetworkTracker private constructor(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val mainHandler = Handler(Looper.getMainLooper())
     private val scanMutex = Mutex()
+    private val proposalChannel = Channel<RecoveryProposal>(Channel.BUFFERED)
+    private val pendingProposalKeys = ConcurrentHashMap.newKeySet<String>()
     private var trackingJob: Job? = null
+    val recoveryProposals = proposalChannel.receiveAsFlow()
 
     fun startTracking() {
         if (trackingJob?.isActive == true) return
@@ -59,6 +75,47 @@ class NetworkTracker private constructor(
                 Toast.makeText(context, "Kamera IP adresleri kontrol ediliyor…", Toast.LENGTH_SHORT).show()
             }
             performIpRecoveryScan()
+        }
+    }
+
+    fun confirmRecovery(proposal: RecoveryProposal) {
+        scope.launch {
+            val key = proposalKey(proposal.cameraId, proposal.newIp)
+            try {
+                val camera = repository.getCameraById(proposal.cameraId) ?: return@launch
+                if (repository.isIpAlreadyUsed(proposal.newIp, camera.id)) {
+                    Log.w(TAG, "Recovery confirmation rejected: IP already used newIp=${proposal.newIp}")
+                    return@launch
+                }
+                val probeUrl = rewriteHost(
+                    camera.subStreamUrl.ifBlank { camera.mainStreamUrl },
+                    camera.ipAddress.substringBefore(":"),
+                    proposal.newIp
+                )
+                if (!streamVerifier.canPlay(probeUrl)) {
+                    Log.w(TAG, "Recovery confirmation failed revalidation camera=${camera.name} newIp=${proposal.newIp}")
+                    return@launch
+                }
+                updateCameraAddress(
+                    camera,
+                    DiscoveryDevice(
+                        ip = proposal.newIp,
+                        uuid = proposal.uuid,
+                        mac = proposal.macAddress,
+                        brand = proposal.brand
+                    ),
+                    "user_confirmed_legacy"
+                )
+            } finally {
+                pendingProposalKeys.remove(key)
+            }
+        }
+    }
+
+    fun rejectRecovery(proposal: RecoveryProposal) {
+        scope.launch {
+            pendingProposalKeys.remove(proposalKey(proposal.cameraId, proposal.newIp))
+            Log.i(TAG, "Recovery proposal rejected camera=${proposal.cameraName} newIp=${proposal.newIp}")
         }
     }
 
@@ -86,7 +143,10 @@ class NetworkTracker private constructor(
         // Existing IP association is the safest opportunity to backfill UUID/MAC
         // for cameras created before identity persistence was added.
         savedCameras.forEach { camera ->
-            val sameIp = discovered.find { it.ip == camera.ipAddress.substringBefore(":") } ?: return@forEach
+            val sameIp = discovered.find {
+                it.ip == camera.ipAddress.substringBefore(":") &&
+                    ("RTSP" in it.protocols || "ONVIF" in it.protocols)
+            } ?: return@forEach
             claimedIps += sameIp.ip
             resolvedCameraIds += camera.id
             val enriched = enrichIdentity(camera, sameIp)
@@ -107,8 +167,8 @@ class NetworkTracker private constructor(
             ipUpdates++
         }
 
-        // Legacy records may have neither UUID nor MAC. Never update from brand or
-        // port alone: rewrite the saved stream URL and require LibVLC to reach Playing.
+        // RTSP proves compatibility, not physical identity. A verified legacy match
+        // is therefore proposed to the user and never applied automatically.
         savedCameras.filterNot { it.id in resolvedCameraIds }.forEach { camera ->
             val candidates = discovered.filter { device ->
                 device.ip !in claimedIps &&
@@ -133,10 +193,21 @@ class NetworkTracker private constructor(
             when (verified.size) {
                 1 -> {
                     val match = verified.single()
-                    updateCameraAddress(camera, match, "verified_rtsp_legacy")
                     claimedIps += match.ip
-                    resolvedCameraIds += camera.id
-                    ipUpdates++
+                    val proposal = RecoveryProposal(
+                        cameraId = camera.id,
+                        cameraName = camera.name,
+                        oldIp = camera.ipAddress.substringBefore(":"),
+                        newIp = match.ip,
+                        uuid = match.uuid,
+                        macAddress = match.mac,
+                        brand = match.brand
+                    )
+                    val key = proposalKey(proposal.cameraId, proposal.newIp)
+                    if (pendingProposalKeys.add(key)) {
+                        proposalChannel.trySend(proposal)
+                        Log.w(TAG, "Legacy recovery requires confirmation camera=${camera.name} oldIp=${proposal.oldIp} candidateIp=${proposal.newIp}")
+                    }
                 }
                 0 -> Log.w(TAG, "Legacy recovery found no playable candidate camera=${camera.name}")
                 else -> Log.w(TAG, "Legacy recovery ambiguous camera=${camera.name} playableCandidates=${verified.joinToString { it.ip }}")
@@ -161,12 +232,15 @@ class NetworkTracker private constructor(
     }
 
     private fun enrichIdentity(camera: CameraEntity, device: DiscoveryDevice): CameraEntity = camera.copy(
-        uuid = camera.uuid.ifBlank { device.uuid.orEmpty() },
+        uuid = camera.uuid.takeIf(CameraIdentityMatcher::isValidUuid)
+            ?: device.uuid.takeIf(CameraIdentityMatcher::isValidUuid).orEmpty(),
         macAddress = camera.macAddress ?: device.mac
     )
 
     private fun rewriteHost(url: String, oldHost: String, newHost: String): String =
         url.replace("@$oldHost", "@$newHost").replace("://$oldHost", "://$newHost")
+
+    private fun proposalKey(cameraId: Int, newIp: String) = "$cameraId@$newIp"
 
     private fun logDiscoveredDevices(devices: List<DiscoveryDevice>) {
         devices.forEach { device ->

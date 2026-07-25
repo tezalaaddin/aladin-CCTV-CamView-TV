@@ -1,10 +1,14 @@
 package com.aladin.aladincamviewer
 
 import androidx.room.Entity
+import androidx.room.Index
 import androidx.room.PrimaryKey
 import kotlinx.serialization.Serializable
 
-@Entity(tableName = "cameras")
+@Entity(
+    tableName = "cameras",
+    indices = [Index(value = ["ipAddress"], unique = true)]
+)
 @Serializable
 data class CameraEntity(
     @PrimaryKey(autoGenerate = true) val id: Int = 0,
