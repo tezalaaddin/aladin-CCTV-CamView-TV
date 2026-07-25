@@ -42,7 +42,7 @@ class HybridScanner(private val context: Context) {
         </Envelope>
     """.trimIndent()
 
-    suspend fun startFullScan(callback: (List<DiscoveryDevice>) -> Unit) = coroutineScope {
+    suspend fun startFullScan(onProgress: (List<DiscoveryDevice>) -> Unit = {}): List<DiscoveryDevice> = coroutineScope {
         val startedAt = System.currentTimeMillis()
         activeScanScope = this
         discoveredDevices.clear()
@@ -56,7 +56,7 @@ class HybridScanner(private val context: Context) {
         val updateJob = launch {
             while (isActive) {
                 delay(1200)
-                callback(getSortedDevices())
+                onProgress(getSortedDevices())
             }
         }
 
@@ -70,7 +70,8 @@ class HybridScanner(private val context: Context) {
         }
         val result = getSortedDevices()
         Log.i("ALADIN_DISCOVERY", "Scan completed devices=${result.size} durationMs=${System.currentTimeMillis() - startedAt}")
-        callback(result)
+        onProgress(result)
+        result
     }
 
     private fun getSortedDevices(): List<DiscoveryDevice> {
