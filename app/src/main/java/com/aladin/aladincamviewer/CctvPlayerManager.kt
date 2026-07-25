@@ -20,6 +20,7 @@ class CctvPlayerManager(
     private var mediaPlayer: MediaPlayer? = MediaPlayer(libVLC)
     private var currentUrl: String? = null
     private var isSubStream = false
+    private var hardwareDecoderEnabled = false
     private var retryAttempt = 0
     private var playGeneration = 0
     private var released = false
@@ -27,19 +28,36 @@ class CctvPlayerManager(
     private var lastBufferBucket = -1
     private val stallDetector = PlaybackStallDetector()
     private var watchdogGeneration = -1
+    private var watchdogTicks = 0
     private val playbackWatchdog = object : Runnable {
         override fun run() {
             val player = mediaPlayer ?: return
             val generation = watchdogGeneration
             if (released || generation != playGeneration) return
 
-            val positionMs = player.time
-            if (player.isPlaying && stallDetector.isStalled(SystemClock.elapsedRealtime(), positionMs)) {
+            val stats = runCatching { player.media?.stats }.getOrNull()
+            val displayedFrames = stats?.displayedPictures?.toLong()
+            val progress = displayedFrames ?: player.time
+            watchdogTicks++
+            if (watchdogTicks % 6 == 0) {
+                Log.d(
+                    tag,
+                    "RTSP health endpoint=${currentUrl?.let(::describeEndpoint)} " +
+                        "displayed=${stats?.displayedPictures} decoded=${stats?.decodedVideo} " +
+                        "demuxBytes=${stats?.demuxReadBytes} mediaTimeMs=${player.time}"
+                )
+            }
+            if (player.isPlaying && stallDetector.isStalled(SystemClock.elapsedRealtime(), progress)) {
                 val url = currentUrl ?: return
                 val endpoint = describeEndpoint(url)
-                Log.w(tag, "RTSP playback stalled endpoint=$endpoint positionMs=$positionMs; restarting")
+                Log.w(
+                    tag,
+                    "RTSP video frames stalled endpoint=$endpoint displayed=${stats?.displayedPictures} " +
+                        "decoded=${stats?.decodedVideo} demuxBytes=${stats?.demuxReadBytes} " +
+                        "mediaTimeMs=${player.time}; restarting"
+                )
                 stopPlaybackWatchdog()
-                scheduleRetry(url, generation, endpoint, "playback_stalled")
+                scheduleRetry(url, generation, endpoint, "video_frames_stalled")
                 return
             }
             mainHandler.postDelayed(this, WATCHDOG_INTERVAL_MS)
@@ -56,6 +74,7 @@ class CctvPlayerManager(
 
     fun initializePlayer(isSubStream: Boolean = false) {
         this.isSubStream = isSubStream
+        hardwareDecoderEnabled = !isSubStream
     }
 
     fun attachView(videoLayout: VLCVideoLayout) {
@@ -73,9 +92,11 @@ class CctvPlayerManager(
         }
         if (url == currentUrl && mediaPlayer?.isPlaying == true) return
 
+        val isNewStream = url != currentUrl
         playGeneration++
         retryAttempt = 0
         currentUrl = url
+        if (isNewStream) hardwareDecoderEnabled = !isSubStream
         released = false
         retryScheduled = false
         lastBufferBucket = -1
@@ -86,7 +107,8 @@ class CctvPlayerManager(
         if (released || generation != playGeneration) return
         val endpoint = describeEndpoint(url)
         val cacheMs = if (isSubStream) 800 else 1500
-        Log.i(tag, "RTSP start endpoint=$endpoint transport=tcp profile=${if (isSubStream) "grid" else "fullscreen"} cacheMs=$cacheMs attempt=${retryAttempt + 1}")
+        val decoder = if (hardwareDecoderEnabled) "hardware" else "software"
+        Log.i(tag, "RTSP start endpoint=$endpoint transport=tcp profile=${if (isSubStream) "grid" else "fullscreen"} decoder=$decoder cacheMs=$cacheMs attempt=${retryAttempt + 1}")
         notifyState(true, null)
 
         mediaPlayer?.setEventListener { event ->
@@ -115,11 +137,13 @@ class CctvPlayerManager(
 
         try {
             val media = Media(libVLC, Uri.parse(url)).apply {
-                setHWDecoderEnabled(true, true)
+                // Some Android TV chipsets lock both MediaCodec sessions when two
+                // RTSP feeds decode concurrently. Grid sub-streams are small enough
+                // for software decoding; retain hardware decoding for fullscreen.
+                setHWDecoderEnabled(hardwareDecoderEnabled, hardwareDecoderEnabled)
                 addOption(":network-caching=$cacheMs")
                 addOption(":rtsp-tcp")
                 addOption(":no-audio")
-                addOption(":clock-jitter=0")
             }
             mediaPlayer?.media = media
             media.release()
@@ -133,6 +157,10 @@ class CctvPlayerManager(
     private fun scheduleRetry(url: String, generation: Int, endpoint: String, reason: String) {
         if (released || generation != playGeneration || retryScheduled) return
         stopPlaybackWatchdog()
+        if (hardwareDecoderEnabled && (reason == "decoder_or_network_error" || reason == "video_frames_stalled")) {
+            hardwareDecoderEnabled = false
+            Log.w(tag, "RTSP decoder fallback endpoint=$endpoint hardware=failed next=software reason=$reason")
+        }
         val delayMs = retryPolicy.delayForAttempt(retryAttempt)
         if (delayMs == null) {
             Log.e(tag, "RTSP retry exhausted endpoint=$endpoint reason=$reason attempts=$retryAttempt")
@@ -155,7 +183,10 @@ class CctvPlayerManager(
     private fun startPlaybackWatchdog(generation: Int) {
         mainHandler.removeCallbacks(playbackWatchdog)
         watchdogGeneration = generation
-        stallDetector.reset(SystemClock.elapsedRealtime(), mediaPlayer?.time ?: -1L)
+        watchdogTicks = 0
+        val initialProgress = runCatching { mediaPlayer?.media?.stats?.displayedPictures?.toLong() }
+            .getOrNull() ?: mediaPlayer?.time ?: -1L
+        stallDetector.reset(SystemClock.elapsedRealtime(), initialProgress)
         Log.d(tag, "RTSP stall watchdog started endpoint=${currentUrl?.let(::describeEndpoint)} thresholdMs=25000")
         mainHandler.postDelayed(playbackWatchdog, WATCHDOG_INTERVAL_MS)
     }

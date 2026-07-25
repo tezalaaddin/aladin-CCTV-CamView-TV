@@ -7,36 +7,36 @@ import org.junit.Test
 class PlaybackStallDetectorTest {
     @Test
     fun movingClockDoesNotStall() {
-        val detector = PlaybackStallDetector(stallThresholdMs = 1_000, minimumProgressMs = 100)
-        detector.reset(nowMs = 0, positionMs = 0)
+        val detector = PlaybackStallDetector(stallThresholdMs = 1_000)
+        detector.reset(nowMs = 0, progress = 0)
 
-        assertFalse(detector.isStalled(nowMs = 900, positionMs = 900))
-        assertFalse(detector.isStalled(nowMs = 1_800, positionMs = 1_800))
+        assertFalse(detector.isStalled(nowMs = 900, progress = 25))
+        assertFalse(detector.isStalled(nowMs = 1_800, progress = 50))
     }
 
     @Test
     fun unchangedClockStallsAfterThreshold() {
-        val detector = PlaybackStallDetector(stallThresholdMs = 1_000, minimumProgressMs = 100)
-        detector.reset(nowMs = 0, positionMs = 500)
+        val detector = PlaybackStallDetector(stallThresholdMs = 1_000)
+        detector.reset(nowMs = 0, progress = 500)
 
-        assertFalse(detector.isStalled(nowMs = 999, positionMs = 500))
-        assertTrue(detector.isStalled(nowMs = 1_000, positionMs = 500))
+        assertFalse(detector.isStalled(nowMs = 999, progress = 500))
+        assertTrue(detector.isStalled(nowMs = 1_000, progress = 500))
     }
 
     @Test
     fun unavailableClockAlsoStallsInsteadOfHangingForever() {
         val detector = PlaybackStallDetector(stallThresholdMs = 1_000)
-        detector.reset(nowMs = 0, positionMs = -1)
+        detector.reset(nowMs = 0, progress = -1)
 
-        assertTrue(detector.isStalled(nowMs = 1_000, positionMs = -1))
+        assertTrue(detector.isStalled(nowMs = 1_000, progress = -1))
     }
 
     @Test
     fun clockResetIsTreatedAsFreshProgress() {
         val detector = PlaybackStallDetector(stallThresholdMs = 1_000)
-        detector.reset(nowMs = 0, positionMs = 5_000)
+        detector.reset(nowMs = 0, progress = 5_000)
 
-        assertFalse(detector.isStalled(nowMs = 900, positionMs = 100))
-        assertFalse(detector.isStalled(nowMs = 1_800, positionMs = 1_000))
+        assertFalse(detector.isStalled(nowMs = 900, progress = 100))
+        assertFalse(detector.isStalled(nowMs = 1_800, progress = 1_000))
     }
 }

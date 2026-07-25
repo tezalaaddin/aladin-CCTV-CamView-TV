@@ -92,7 +92,7 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 
 - `CctvPlayerManager` LibVLC örneğini, medya seçeneklerini, donanım hızlandırmayı, olay dinleyicisini ve kaynak bırakmayı yönetir.
 - Bağlantı hatasında `RetryPolicy`, artan bekleme süreleriyle sınırlı yeniden deneme zamanlarını sağlar.
-- `PlaybackStallDetector`, LibVLC `Playing` durumunda kalsa bile medya saati 25 saniye ilerlemezse donmayı belirler; `CctvPlayerManager` kontrollü yeniden bağlantı başlatır.
+- `PlaybackStallDetector`, LibVLC `Playing` durumunda kalsa ve medya saati ilerlese bile gösterilen kare sayısı 25 saniye artmazsa donmayı belirler; `CctvPlayerManager` kontrollü yeniden bağlantı başlatır.
 - Buffer logları yalnızca anlamlı yüzde eşiklerinde yazılır; böylece Logcat gereksiz yere dolmaz.
 - Görünüm geri dönüştürüldüğünde veya Activity yok edildiğinde oynatıcı durdurulmalı ve VLC kaynakları serbest bırakılmalıdır.
 - Bazı standart dışı RTSP kameralarında Media3/ExoPlayer oynatamadığı için ana motor LibVLC’dir. Gelecekte APK boyutunu daha da düşürmek için kamera bazlı Media3→LibVLC fallback düşünülebilir; ancak iki motoru birlikte paketlemek boyutu ve test matrisini artırır.
@@ -171,9 +171,9 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 
 ### 5.4 Medya ve kamera kontrolü
 
-- `CctvPlayerManager.kt`: LibVLC/MediaPlayer yaşam döngüsü, video layout bağlantısı, ağ cache’i, donanım çözme, ses, olaylar, retry ve temizleme işlemleri.
+- `CctvPlayerManager.kt`: LibVLC/MediaPlayer yaşam döngüsü, video layout bağlantısı, ağ cache’i, decoder seçimi, ses, olaylar, retry ve temizleme işlemleri. TV MediaCodec kilitlenmesini önlemek için ızgara alt akışları yazılımsal çözülür; tam ekran önce donanımı dener, decoder hatası veya kare donmasında yazılıma düşer.
 - `RetryPolicy.kt`: `delayForAttempt` ile deneme numarasına karşılık gelen bekleme süresini verir; sınır aşılırsa `null` döner.
-- `PlaybackStallDetector.kt`: Duvar saati ile LibVLC medya saatini karşılaştırır; hata olayı üretmeyen sessiz RTSP donmalarını belirler.
+- `PlaybackStallDetector.kt`: Duvar saati ile öncelikle LibVLC `displayedPictures` sayacını karşılaştırır; hata olayı üretmeyen decoder/render donmalarını belirler. İstatistik yoksa medya saatine döner.
 - `RtspStreamVerifier.kt`: `canPlay` ile görünür UI oluşturmadan kısa süreli LibVLC probe yapar; Playing durumunu kimlik bilgilerini loglamadan doğrular. `endpoint` log için güvenli uç bilgisi üretir.
 - `PtzManager.kt`: ONVIF SOAP üzerinden sürekli pan/tilt/zoom komutları ve durdurma isteği gönderir.
 - `OnvifManager.kt`: Cihaz/medya servislerini sorgular, profil ve stream URI bilgisini çıkarır, encoder ayarlarını standartlaştırmayı dener ve WS-Security digest üretir.
@@ -359,6 +359,10 @@ TV kontrol listesi:
 
 ### 25 Temmuz 2026 — Sessiz RTSP donma algılama
 
-- LibVLC hata vermeden `Playing` durumunda kalan fakat görüntü zamanı ilerlemeyen akışlar için `PlaybackStallDetector` eklendi.
-- Medya saati 25 saniye ilerlemediğinde mevcut kontrollü retry akışıyla RTSP oturumu yeniden başlatılır.
-- Donma algılama kararları `ALADIN_VLC` altında güvenli endpoint ve `playback_stalled` nedeni ile loglanır.
+- LibVLC hata vermeden `Playing` durumunda kalan fakat gösterilen kare sayısı ilerlemeyen akışlar için `PlaybackStallDetector` eklendi.
+- `displayedPictures` sayacı 25 saniye ilerlemediğinde mevcut kontrollü retry akışıyla RTSP oturumu yeniden başlatılır; sayaç alınamazsa medya saati fallback olarak kullanılır.
+- Her 30 saniyede gösterilen/çözülen kare ve demux byte sayaçları `ALADIN_VLC` sağlık kaydına yazılır; donma `video_frames_stalled` nedeni ile loglanır.
+- MediaCodec sürücü kilitlenmesi nedeniyle düşük çözünürlüklü ızgara alt akışları yazılımsal decoder’a alındı. Tam ekran akış önce donanımı kullanır; ilk decoder hatası veya kare donmasında otomatik olarak yazılımsal decoder’a düşer.
+- Zaman damgası bozuk RTSP akışlarında LibVLC’nin varsayılan saat düzeltmesini devre dışı bırakan `clock-jitter=0` kaldırıldı.
+- Gerçek Android TV testinde iki ızgara akışının gösterilen/çözülen kare sayaçlarının sürekli ilerlediği ve önceki yaklaşık 30 saniyelik decoder donmasının ortadan kalktığı doğrulandı.
+- Aynı gerçek cihaz oturumunda DHCP ile IP’si değişen kamera, uygulama yeniden açıldığında UUID/MAC tabanlı kurtarma akışıyla otomatik olarak güncellendi.
