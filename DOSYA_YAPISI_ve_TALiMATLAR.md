@@ -2,7 +2,7 @@
 
 > Son doğrulama: 25 Temmuz 2026
 >
-> Belge kapsamı: `master`, commit `2b73b4f` sonrasındaki yapı
+> Belge kapsamı: Güncel `master` çalışma ağacı; kesin sürüm için `git log` kullanılır
 >
 > Kaynak kod deposu: https://github.com/tezalaaddin/aladin-CCTV-CamView-TV
 
@@ -92,6 +92,7 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 
 - `CctvPlayerManager` LibVLC örneğini, medya seçeneklerini, donanım hızlandırmayı, olay dinleyicisini ve kaynak bırakmayı yönetir.
 - Bağlantı hatasında `RetryPolicy`, artan bekleme süreleriyle sınırlı yeniden deneme zamanlarını sağlar.
+- `PlaybackStallDetector`, LibVLC `Playing` durumunda kalsa bile medya saati 25 saniye ilerlemezse donmayı belirler; `CctvPlayerManager` kontrollü yeniden bağlantı başlatır.
 - Buffer logları yalnızca anlamlı yüzde eşiklerinde yazılır; böylece Logcat gereksiz yere dolmaz.
 - Görünüm geri dönüştürüldüğünde veya Activity yok edildiğinde oynatıcı durdurulmalı ve VLC kaynakları serbest bırakılmalıdır.
 - Bazı standart dışı RTSP kameralarında Media3/ExoPlayer oynatamadığı için ana motor LibVLC’dir. Gelecekte APK boyutunu daha da düşürmek için kamera bazlı Media3→LibVLC fallback düşünülebilir; ancak iki motoru birlikte paketlemek boyutu ve test matrisini artırır.
@@ -172,6 +173,7 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 
 - `CctvPlayerManager.kt`: LibVLC/MediaPlayer yaşam döngüsü, video layout bağlantısı, ağ cache’i, donanım çözme, ses, olaylar, retry ve temizleme işlemleri.
 - `RetryPolicy.kt`: `delayForAttempt` ile deneme numarasına karşılık gelen bekleme süresini verir; sınır aşılırsa `null` döner.
+- `PlaybackStallDetector.kt`: Duvar saati ile LibVLC medya saatini karşılaştırır; hata olayı üretmeyen sessiz RTSP donmalarını belirler.
 - `RtspStreamVerifier.kt`: `canPlay` ile görünür UI oluşturmadan kısa süreli LibVLC probe yapar; Playing durumunu kimlik bilgilerini loglamadan doğrular. `endpoint` log için güvenli uç bilgisi üretir.
 - `PtzManager.kt`: ONVIF SOAP üzerinden sürekli pan/tilt/zoom komutları ve durdurma isteği gönderir.
 - `OnvifManager.kt`: Cihaz/medya servislerini sorgular, profil ve stream URI bilgisini çıkarır, encoder ayarlarını standartlaştırmayı dener ve WS-Security digest üretir.
@@ -287,6 +289,7 @@ Mevcut birim testleri:
 
 - `CameraIdentityMatcherTest.kt`: UUID/MAC normalizasyonu, geçersiz UUID reddi, kimliksiz eşleşmeme ve marka uyumu.
 - `RetryPolicyTest.kt`: Retry gecikme dizisi ve sınır davranışı.
+- `PlaybackStallDetectorTest.kt`: İlerleyen, sabit kalan, kullanılamayan ve sıfırlanan medya saati senaryoları.
 - `ExampleUnitTest.kt`: Temel örnek test; anlamlı proje testiyle değiştirilmesi önerilir.
 - `ExampleInstrumentedTest.kt`: Temel cihaz testi; Room migration ve TV akışlarıyla genişletilmelidir.
 
@@ -353,3 +356,9 @@ TV kontrol listesi:
 
 - Dosya, uygulamayı tek başına anlamaya yetecek proje özeti, kritik akışlar, dosya/fonksiyon kataloğu, veri modeli, log sözleşmesi, test adımları, güvenlik kuralları ve teknik borçlarla yeniden düzenlendi.
 - Ölçülmemiş başarı oranları ve garanti ifadeleri kaldırıldı; kodun nihai doğruluk kaynağı olduğu açıklandı.
+
+### 25 Temmuz 2026 — Sessiz RTSP donma algılama
+
+- LibVLC hata vermeden `Playing` durumunda kalan fakat görüntü zamanı ilerlemeyen akışlar için `PlaybackStallDetector` eklendi.
+- Medya saati 25 saniye ilerlemediğinde mevcut kontrollü retry akışıyla RTSP oturumu yeniden başlatılır.
+- Donma algılama kararları `ALADIN_VLC` altında güvenli endpoint ve `playback_stalled` nedeni ile loglanır.

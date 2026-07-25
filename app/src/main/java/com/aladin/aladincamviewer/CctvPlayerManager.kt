@@ -3,6 +3,7 @@ package com.aladin.aladincamviewer
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
+import android.os.SystemClock
 import android.util.Log
 import org.videolan.libvlc.LibVLC
 import org.videolan.libvlc.Media
@@ -24,6 +25,30 @@ class CctvPlayerManager(
     private var released = false
     private var retryScheduled = false
     private var lastBufferBucket = -1
+    private val stallDetector = PlaybackStallDetector()
+    private var watchdogGeneration = -1
+    private val playbackWatchdog = object : Runnable {
+        override fun run() {
+            val player = mediaPlayer ?: return
+            val generation = watchdogGeneration
+            if (released || generation != playGeneration) return
+
+            val positionMs = player.time
+            if (player.isPlaying && stallDetector.isStalled(SystemClock.elapsedRealtime(), positionMs)) {
+                val url = currentUrl ?: return
+                val endpoint = describeEndpoint(url)
+                Log.w(tag, "RTSP playback stalled endpoint=$endpoint positionMs=$positionMs; restarting")
+                stopPlaybackWatchdog()
+                scheduleRetry(url, generation, endpoint, "playback_stalled")
+                return
+            }
+            mainHandler.postDelayed(this, WATCHDOG_INTERVAL_MS)
+        }
+    }
+
+    companion object {
+        private const val WATCHDOG_INTERVAL_MS = 5_000L
+    }
 
     init {
         mediaPlayer?.videoScale = MediaPlayer.ScaleType.SURFACE_FILL
@@ -72,6 +97,7 @@ class CctvPlayerManager(
                     retryScheduled = false
                     notifyState(false, null)
                     mediaPlayer?.videoScale = MediaPlayer.ScaleType.SURFACE_FILL
+                    startPlaybackWatchdog(generation)
                 }
                 MediaPlayer.Event.Buffering -> {
                     val bucket = (event.buffering.toInt().coerceIn(0, 100) / 25) * 25
@@ -106,6 +132,7 @@ class CctvPlayerManager(
 
     private fun scheduleRetry(url: String, generation: Int, endpoint: String, reason: String) {
         if (released || generation != playGeneration || retryScheduled) return
+        stopPlaybackWatchdog()
         val delayMs = retryPolicy.delayForAttempt(retryAttempt)
         if (delayMs == null) {
             Log.e(tag, "RTSP retry exhausted endpoint=$endpoint reason=$reason attempts=$retryAttempt")
@@ -123,6 +150,19 @@ class CctvPlayerManager(
                 startPlayback(url, generation)
             }
         }, delayMs)
+    }
+
+    private fun startPlaybackWatchdog(generation: Int) {
+        mainHandler.removeCallbacks(playbackWatchdog)
+        watchdogGeneration = generation
+        stallDetector.reset(SystemClock.elapsedRealtime(), mediaPlayer?.time ?: -1L)
+        Log.d(tag, "RTSP stall watchdog started endpoint=${currentUrl?.let(::describeEndpoint)} thresholdMs=25000")
+        mainHandler.postDelayed(playbackWatchdog, WATCHDOG_INTERVAL_MS)
+    }
+
+    private fun stopPlaybackWatchdog() {
+        watchdogGeneration = -1
+        mainHandler.removeCallbacks(playbackWatchdog)
     }
 
     private fun describeEndpoint(url: String): String = runCatching {
@@ -145,6 +185,7 @@ class CctvPlayerManager(
     fun releasePlayer() {
         released = true
         playGeneration++
+        stopPlaybackWatchdog()
         mainHandler.removeCallbacksAndMessages(null)
         mediaPlayer?.let {
             it.setEventListener(null)
