@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.nsd.NsdManager
 import android.net.nsd.NsdServiceInfo
 import android.net.wifi.WifiManager
+import android.util.Log
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -17,6 +18,8 @@ class HybridScanner(private val context: Context) {
     private val nsdManager = context.getSystemService(Context.NSD_SERVICE) as NsdManager
     private val discoveredDevices = Collections.synchronizedMap(mutableMapOf<String, DiscoveryDevice>())
     private val scanSemaphore = Semaphore(25) // Increased concurrency
+    private val mdnsListeners = Collections.synchronizedList(mutableListOf<NsdManager.DiscoveryListener>())
+    @Volatile private var activeScanScope: CoroutineScope? = null
 
     private val ONVIF_ADDRESS = "239.255.255.250"
     private val ONVIF_PORT = 3702
@@ -40,6 +43,8 @@ class HybridScanner(private val context: Context) {
     """.trimIndent()
 
     suspend fun startFullScan(callback: (List<DiscoveryDevice>) -> Unit) = coroutineScope {
+        val startedAt = System.currentTimeMillis()
+        activeScanScope = this
         discoveredDevices.clear()
         val jobs = mutableListOf<Job>()
         
@@ -55,10 +60,17 @@ class HybridScanner(private val context: Context) {
             }
         }
 
-        delay(12000) // Slightly longer for thoroughness
-        jobs.forEach { it.cancel() }
-        updateJob.cancel()
-        callback(getSortedDevices())
+        try {
+            delay(12000) // Slightly longer for thoroughness
+        } finally {
+            jobs.forEach { it.cancel() }
+            updateJob.cancel()
+            stopMdnsDiscovery()
+            activeScanScope = null
+        }
+        val result = getSortedDevices()
+        Log.i("ALADIN_DISCOVERY", "Scan completed devices=${result.size} durationMs=${System.currentTimeMillis() - startedAt}")
+        callback(result)
     }
 
     private fun getSortedDevices(): List<DiscoveryDevice> {
@@ -101,7 +113,7 @@ class HybridScanner(private val context: Context) {
                         parseOnvifPacket(response, device)
                     }
                     
-                    CoroutineScope(Dispatchers.IO).launch { 
+                    activeScanScope?.launch(Dispatchers.IO) {
                         investigateDevice(device) 
                     }
                 } catch (e: Exception) {}
@@ -137,7 +149,7 @@ class HybridScanner(private val context: Context) {
                                 device.brand = detectedBrand
                             }
                         }
-                        CoroutineScope(Dispatchers.IO).launch { investigateDevice(device) }
+                        activeScanScope?.launch(Dispatchers.IO) { investigateDevice(device) }
                     }
                 })
             }
@@ -146,7 +158,16 @@ class HybridScanner(private val context: Context) {
             override fun onStopDiscoveryFailed(serviceType: String, errorCode: Int) {}
             override fun onServiceLost(service: NsdServiceInfo) {}
         }
+        mdnsListeners.add(listener)
         nsdManager.discoverServices(serviceType, NsdManager.PROTOCOL_DNS_SD, listener)
+    }
+
+    private fun stopMdnsDiscovery() {
+        val listeners = synchronized(mdnsListeners) { mdnsListeners.toList().also { mdnsListeners.clear() } }
+        listeners.forEach { listener ->
+            runCatching { nsdManager.stopServiceDiscovery(listener) }
+                .onFailure { Log.w("ALADIN_DISCOVERY", "mDNS stop failed", it) }
+        }
     }
 
     private suspend fun scanArp() = withContext(Dispatchers.IO) {

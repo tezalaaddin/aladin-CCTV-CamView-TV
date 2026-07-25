@@ -1,0 +1,16 @@
+#!/bin/sh
+set -eu
+
+if git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(apk|aab|jks|keystore)$' >/dev/null 2>&1; then
+  echo "ERROR: Binary release or signing files must not be committed."
+  exit 1
+fi
+
+matches=$(git grep --cached -nI -E '(rtsp|https?)://[A-Za-z0-9._-]+:[^@[:space:]]+@[A-Za-z0-9._:-]+' -- . ':(exclude).gitleaks.toml' || true)
+if [ -n "$matches" ]; then
+  echo "ERROR: A hardcoded authenticated URI was found:"
+  echo "$matches"
+  exit 1
+fi
+
+echo "Secret pre-commit scan passed."

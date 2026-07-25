@@ -114,7 +114,7 @@ class MainActivity : AppCompatActivity() {
             if (success) {
                 startActivity(Intent(this, SettingsActivity::class.java))
             } else {
-                Toast.makeText(this, "Access Denied", Toast.LENGTH_SHORT).show()
+                Toast.makeText(this, R.string.access_denied, Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -137,7 +137,7 @@ class MainActivity : AppCompatActivity() {
         
         recyclerView.adapter = CameraAdapter(pageItems)
         val totalPages = (currentCameras.size + pageSize - 1) / pageSize
-        pageIndicator.text = "Page ${currentPage + 1}/$totalPages"
+        pageIndicator.text = getString(R.string.page_format, currentPage + 1, totalPages)
 
         if (focusIndex != -1) {
             recyclerView.post {
@@ -216,7 +216,7 @@ class MainActivity : AppCompatActivity() {
             }
             return
         } else {
-            Toast.makeText(this, "Press back again to exit", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.press_back_exit, Toast.LENGTH_SHORT).show()
         }
         backPressedTime = System.currentTimeMillis()
     }

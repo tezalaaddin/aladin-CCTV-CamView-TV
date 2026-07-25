@@ -7,6 +7,7 @@ import android.net.NetworkCapabilities
 import android.net.NetworkRequest
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 
 /**
  * Monitors network connectivity changes.
@@ -14,37 +15,52 @@ import android.os.Looper
  */
 class NetworkMonitor(context: Context, private val onNetworkStatusChanged: (Boolean) -> Unit) {
 
+    private val tag = "ALADIN_NETWORK"
+
     private val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
     private val mainHandler = Handler(Looper.getMainLooper())
+    private var isRegistered = false
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
+            Log.i(tag, "LAN available network=$network")
             mainHandler.post { onNetworkStatusChanged(true) }
         }
 
         override fun onLost(network: Network) {
-            mainHandler.post { onNetworkStatusChanged(false) }
+            val connected = isCurrentlyConnected()
+            Log.w(tag, "LAN lost network=$network anotherLanAvailable=$connected")
+            mainHandler.post { onNetworkStatusChanged(connected) }
         }
     }
 
     fun start() {
         // Check initial state
         val initialStatus = isCurrentlyConnected()
+        Log.d(tag, "LAN monitor start initialConnected=$initialStatus")
         onNetworkStatusChanged(initialStatus)
 
         val request = NetworkRequest.Builder()
-            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            // Dedicated CCTV networks often have no internet route.
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN)
             .build()
-        connectivityManager.registerNetworkCallback(request, networkCallback)
+        if (!isRegistered) {
+            connectivityManager.registerNetworkCallback(request, networkCallback)
+            isRegistered = true
+        }
     }
 
     fun stop() {
-        connectivityManager.unregisterNetworkCallback(networkCallback)
+        if (isRegistered) {
+            connectivityManager.unregisterNetworkCallback(networkCallback)
+            isRegistered = false
+        }
     }
 
     private fun isCurrentlyConnected(): Boolean {
         val network = connectivityManager.activeNetwork ?: return false
         val capabilities = connectivityManager.getNetworkCapabilities(network) ?: return false
-        return capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+        return capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
     }
 }

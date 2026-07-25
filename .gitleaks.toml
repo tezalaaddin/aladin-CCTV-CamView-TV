@@ -1,0 +1,10 @@
+title = "Aladin CCTV secret protection"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "hardcoded-authenticated-uri"
+description = "URI containing hardcoded username and password"
+regex = '''(?i)(?:rtsp|https?)://[a-z0-9._-]+:[^@\s"']+@[a-z0-9._:-]+'''
+tags = ["credential", "cctv"]

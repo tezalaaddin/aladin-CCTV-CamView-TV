@@ -5,18 +5,17 @@ import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.videolan.libvlc.util.VLCVideoLayout
 
 /**
- * Diagnostic Activity using LibVLC for robust playback.
+ * Plays the first two cameras from the local development database.
+ * No camera address or credential may be hardcoded in this source file.
  */
 class DiagnosticActivity : AppCompatActivity() {
-
-    private val TAG = "ALADIN_DIAG"
+    private val tag = "ALADIN_DIAG"
     private lateinit var logView: TextView
-    
     private var manager1: CctvPlayerManager? = null
     private var manager2: CctvPlayerManager? = null
 
@@ -24,50 +23,54 @@ class DiagnosticActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_diagnostic)
         logView = findViewById(R.id.diag_log)
+        appendLog("RTSP diagnostic mode (LibVLC)")
 
-        appendLog("🚀 DIAGNOSTIC MODE V9 (LibVLC Engine)")
-        
         lifecycleScope.launch {
-            delay(1000)
+            val cameras = AppDatabase.getDatabase(applicationContext)
+                .cameraDao()
+                .getAllCameras()
+                .first()
+                .take(2)
 
-            // Test Cam 1 (Redline)
-            manager1 = CctvPlayerManager(
-                onStateChanged = { loading, err ->
-                    runOnUiThread {
-                        if (err != null) appendLog("❌ Cam 1 Error: $err")
-                        else if (!loading) appendLog("✅ Cam 1 READY (Playing)!")
-                    }
-                }
-            )
-            findViewById<VLCVideoLayout>(R.id.diag_player_1).let { manager1?.attachView(it) }
-            manager1?.playStream("rtsp://example.invalid/media/video1")
+            if (cameras.isEmpty()) {
+                appendLog("No configured camera found. Add a camera first.")
+                return@launch
+            }
 
-            delay(3000)
+            cameras.getOrNull(0)?.let { camera ->
+                appendLog("Starting camera 1: ${camera.name}")
+                manager1 = createManager(1)
+                manager1?.attachView(findViewById<VLCVideoLayout>(R.id.diag_player_1))
+                manager1?.playStream(camera.subStreamUrl.ifBlank { camera.mainStreamUrl })
+            }
 
-            // Test Cam 2 (Aselsan)
-            manager2 = CctvPlayerManager(
-                onStateChanged = { loading, err ->
-                    runOnUiThread {
-                        if (err != null) appendLog("❌ Cam 2 Error: $err")
-                        else if (!loading) appendLog("✅ Cam 2 READY (Playing)!")
-                    }
-                }
-            )
-            findViewById<VLCVideoLayout>(R.id.diag_player_2).let { manager2?.attachView(it) }
-            manager2?.playStream("rtsp://example.invalid/stream2")
+            cameras.getOrNull(1)?.let { camera ->
+                appendLog("Starting camera 2: ${camera.name}")
+                manager2 = createManager(2)
+                manager2?.attachView(findViewById<VLCVideoLayout>(R.id.diag_player_2))
+                manager2?.playStream(camera.subStreamUrl.ifBlank { camera.mainStreamUrl })
+            }
         }
     }
 
-    private fun appendLog(msg: String) {
+    private fun createManager(index: Int) = CctvPlayerManager { loading, error ->
+        when {
+            error != null -> appendLog("Camera $index: $error")
+            loading -> appendLog("Camera $index: connecting")
+            else -> appendLog("Camera $index: playing")
+        }
+    }.also { it.initializePlayer(isSubStream = true) }
+
+    private fun appendLog(message: String) {
         runOnUiThread {
-            logView.append("\n$msg")
-            Log.d(TAG, msg)
+            logView.append("\n$message")
+            Log.d(tag, message)
         }
     }
 
     override fun onDestroy() {
-        super.onDestroy()
         manager1?.releasePlayer()
         manager2?.releasePlayer()
+        super.onDestroy()
     }
 }

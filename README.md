@@ -33,6 +33,13 @@ Aladin CCTV is a professional, high-performance CCTV viewer application specific
 3. Build the project using Gradle.
 4. Deploy to your Android TV via ADB.
 
+### APK architecture
+
+Release builds produce separate APKs for `arm64-v8a` and `armeabi-v7a`. LibVLC
+contains large native codec libraries, so installing the APK that matches the TV
+avoids shipping both architectures to every device. Most current Android TVs use
+`arm64-v8a`; `adb shell getprop ro.product.cpu.abi` shows the device ABI.
+
 ## ⚙️ Configuration
 
 - **Username/Password:** Admin credentials for ONVIF/RTSP.

@@ -4,12 +4,15 @@ import android.util.Base64
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.regex.Pattern
@@ -21,7 +24,7 @@ import java.util.regex.Pattern
 class PtzManager(private val camera: CameraModel) {
 
     private val TAG = "PtzManager"
-    private val scope = CoroutineScope(Dispatchers.IO)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var cachedProfileToken: String? = null
     private var cachedPtzUri: String? = null
     private var actualPort: Int? = null
@@ -50,6 +53,12 @@ class PtzManager(private val camera: CameraModel) {
                 </tptz:Stop>
             """.trimIndent()
         }
+    }
+
+    /** Cancels discovery and movement requests owned by this screen. */
+    fun close() {
+        Log.d(TAG, "PTZ manager closed camera=${camera.name}")
+        scope.cancel()
     }
 
     private fun executePtz(envelopeProvider: (String) -> String) {
@@ -107,6 +116,7 @@ class PtzManager(private val camera: CameraModel) {
             conn.requestMethod = "POST"
             conn.doOutput = true
             conn.connectTimeout = 3000
+            conn.readTimeout = 5000
             conn.setRequestProperty("Content-Type", "application/soap+xml; charset=utf-8")
             OutputStreamWriter(conn.outputStream).use { it.write(soap) }
             if (conn.responseCode == 200) conn.inputStream.bufferedReader().use { it.readText() } else null
@@ -130,7 +140,7 @@ class PtzManager(private val camera: CameraModel) {
     """.trimIndent()
 
     private fun createSoapEnvelope(body: String): String {
-        val nonce = Base64.encodeToString(ByteArray(16).also { Random().nextBytes(it) }, Base64.NO_WRAP)
+        val nonce = Base64.encodeToString(ByteArray(16).also { SecureRandom().nextBytes(it) }, Base64.NO_WRAP)
         val created = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date())
         val digest = try {
             val combined = Base64.decode(nonce, Base64.DEFAULT) + created.toByteArray() + camera.password.toByteArray()

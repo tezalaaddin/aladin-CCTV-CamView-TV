@@ -19,8 +19,16 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 🚀 OPTIMIZATION: Most TVs use ARM. Removing x86/x86_64 saves ~100MB
-        ndk {
-            abiFilters.addAll(listOf("armeabi-v7a", "arm64-v8a"))
+    }
+
+    // LibVLC native binaries dominate APK size. Produce one APK per TV ABI
+    // instead of shipping both 32-bit and 64-bit engines to every device.
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("armeabi-v7a", "arm64-v8a")
+            isUniversalApk = false
         }
     }
 
@@ -29,7 +37,6 @@ android {
             // 🚀 OPTIMIZATION: Enable shrinking and obfuscation
             isMinifyEnabled = true
             isShrinkResources = true
-            signingConfig = signingConfigs.getByName("debug")
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

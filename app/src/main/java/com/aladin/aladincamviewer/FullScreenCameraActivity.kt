@@ -47,7 +47,7 @@ class FullScreenCameraActivity : AppCompatActivity() {
     }
 
     override fun attachBaseContext(newBase: Context) {
-        val lang = newBase.getSharedPreferences("aladin_settings", Context.MODE_PRIVATE)
+        val lang = newBase.getSharedPreferences("aladin_prefs_v2", Context.MODE_PRIVATE)
             .getString("app_lang", "en") ?: "en"
         super.attachBaseContext(LocaleHelper.setLocale(newBase, lang))
     }
@@ -96,6 +96,7 @@ class FullScreenCameraActivity : AppCompatActivity() {
     }
 
     private fun playCamera(camera: CameraModel) {
+        ptzManager?.close()
         camTitle?.text = camera.name
         ptzManager = PtzManager(camera)
         playerManager?.playStream(camera.mainStreamUrl)
@@ -167,10 +168,10 @@ class FullScreenCameraActivity : AppCompatActivity() {
         
         if (isPtzMode) {
             currentFocus?.clearFocus()
-            Toast.makeText(this, "PTZ Mode ACTIVE - Use D-Pad", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.ptz_on, Toast.LENGTH_SHORT).show()
         } else {
             findViewById<View>(R.id.btn_ptz_toggle)?.requestFocus()
-            Toast.makeText(this, "PTZ OFF", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, R.string.ptz_off, Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -192,6 +193,7 @@ class FullScreenCameraActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(clockRunnable)
+        ptzManager?.close()
         playerManager?.releasePlayer()
         tourJob?.cancel()
     }

@@ -42,9 +42,10 @@ object CctvWatchdog {
 
         // Daily restart at 04:00 AM doesn't need to be exact. 
         // Using setAndAllowWhileIdle to ensure it fires even in Doze mode on TVs
-        alarmManager.setAndAllowWhileIdle(
+        alarmManager.setInexactRepeating(
             AlarmManager.RTC_WAKEUP,
             calendar.timeInMillis,
+            AlarmManager.INTERVAL_DAY,
             pendingIntent
         )
     }

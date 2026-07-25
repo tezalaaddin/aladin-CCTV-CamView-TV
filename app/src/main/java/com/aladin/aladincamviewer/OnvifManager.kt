@@ -8,6 +8,7 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 import java.security.MessageDigest
+import java.security.SecureRandom
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.regex.Pattern
@@ -249,7 +250,7 @@ class OnvifManager(private val ip: String, private val user: String, private val
         """.trimIndent()
     }
 
-    private fun generateNonce(): String = Base64.encodeToString(ByteArray(16).apply { Random().nextBytes(this) }, Base64.NO_WRAP)
+    private fun generateNonce(): String = Base64.encodeToString(ByteArray(16).apply { SecureRandom().nextBytes(this) }, Base64.NO_WRAP)
     private fun getUtcNow(): String = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date())
     private fun generatePasswordDigest(password: String, nonceBase64: String, created: String): String {
         return try {
