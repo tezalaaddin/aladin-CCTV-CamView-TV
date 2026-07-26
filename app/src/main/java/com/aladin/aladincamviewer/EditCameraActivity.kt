@@ -3,6 +3,7 @@ package com.aladin.aladincamviewer
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.WindowManager
 import android.widget.*
 import androidx.activity.viewModels
 import androidx.appcompat.app.AlertDialog
@@ -12,7 +13,7 @@ import kotlinx.coroutines.launch
 
 class EditCameraActivity : AppCompatActivity() {
 
-    private val brands = listOf("Hikvision", "Dahua", "Tiandy", "Uniview", "ONVIF", "AJCloud", "Custom")
+    private val brands = CameraBrandProfiles.knownBrands()
     private var selectedBrand = "Custom"
     private var cameraId = 0
     private var displayOrder = 1
@@ -25,14 +26,21 @@ class EditCameraActivity : AppCompatActivity() {
     private lateinit var etMain: EditText
     private lateinit var etSub: EditText
     private lateinit var cbPtz: CheckBox
+    private lateinit var cbOnvifSame: CheckBox
+    private lateinit var etOnvifUser: EditText
+    private lateinit var etOnvifPass: EditText
+    private lateinit var onvifCredentialsLayout: View
     private lateinit var btnBrand: Button
     private lateinit var btnDelete: Button
+    private lateinit var setupStatus: TextView
 
     private val viewModel: EditCameraViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_edit_camera)
+        window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN)
+        TvFocusManager.install(this)
 
         cameraId = intent.getIntExtra("camera_id", 0)
         displayOrder = intent.getIntExtra("display_order", 1)
@@ -51,6 +59,14 @@ class EditCameraActivity : AppCompatActivity() {
         etMain = findViewById(R.id.et_main_url)
         etSub = findViewById(R.id.et_sub_url)
         cbPtz = findViewById(R.id.cb_ptz)
+        cbOnvifSame = findViewById(R.id.cb_onvif_same)
+        etOnvifUser = findViewById(R.id.et_onvif_user)
+        etOnvifPass = findViewById(R.id.et_onvif_pass)
+        onvifCredentialsLayout = findViewById(R.id.layout_edit_onvif_credentials)
+        setupStatus = findViewById(R.id.txt_setup_status)
+        cbOnvifSame.setOnCheckedChangeListener { _, same ->
+            onvifCredentialsLayout.visibility = if (same) View.GONE else View.VISIBLE
+        }
 
         if (cameraId != 0) {
             btnDelete.visibility = View.VISIBLE
@@ -61,6 +77,12 @@ class EditCameraActivity : AppCompatActivity() {
                     etIp.setText(camera.ipAddress)
                     etUser.setText(camera.username)
                     etPass.setText(camera.password)
+                    val sameOnvifCredentials = camera.onvifUsername.isBlank() && camera.onvifPassword.isBlank()
+                    cbOnvifSame.isChecked = sameOnvifCredentials
+                    if (!sameOnvifCredentials) {
+                        etOnvifUser.setText(camera.onvifUsername)
+                        etOnvifPass.setText(camera.onvifPassword)
+                    }
                     etMain.setText(camera.mainStreamUrl)
                     etSub.setText(camera.subStreamUrl)
                     cbPtz.isChecked = camera.ptzSupported
@@ -77,10 +99,11 @@ class EditCameraActivity : AppCompatActivity() {
         btnBrand.setOnClickListener { showBrandPicker() }
         btnDelete.setOnClickListener { confirmDelete() }
         findViewById<Button>(R.id.btn_apply_template).setOnClickListener { generateUrls() }
-        findViewById<Button>(R.id.btn_save_camera).setOnClickListener { saveAndExit() }
+        findViewById<Button>(R.id.btn_save_camera).setOnClickListener { verifyAndSave() }
         findViewById<Button>(R.id.btn_fix_camera).setOnClickListener { fixCameraViaOnvif() }
         
         findViewById<Button>(R.id.btn_apply_to_all)?.setOnClickListener { applyCommonSettingsToAll() }
+        btnBrand.requestFocus()
     }
 
     private fun confirmDelete() {
@@ -136,27 +159,23 @@ class EditCameraActivity : AppCompatActivity() {
             .show()
 
         lifecycleScope.launch {
-            val manager = OnvifManager(ip, user, pass)
-            val details = manager.getDeviceDetails()
-            
-            if (details != null) {
-                // Try to standardize settings to fix "sprop-vps" without changing codec
-                val optSuccess = manager.standardizeEncoderSettings()
-                Log.d("ALADIN_DEBUG", "Encoder Standardization result: $optSuccess")
-
-                selectedBrand = details.manufacturer ?: selectedBrand
+            val result = CameraConfigurationResolver(this@EditCameraActivity).resolve(configurationInput(ip, user, pass))
+            progressDialog.dismiss()
+            if (result.verified) {
+                selectedBrand = result.brand
                 btnBrand.text = getString(R.string.brand_label, selectedBrand)
-                
-                if (details.mainStreamUrl != null) etMain.setText(details.mainStreamUrl)
-                if (details.subStreamUrl != null) etSub.setText(details.subStreamUrl)
-                cbPtz.isChecked = details.ptzSupported
-                
-                progressDialog.dismiss()
-                
-                val msg = getString(R.string.onvif_success_msg, details.manufacturer ?: "Camera")
+                etMain.setText(result.mainUrl)
+                etSub.setText(result.subUrl)
+                cbPtz.isChecked = result.ptzSupported
+                prefilledUuid = result.uuid.orEmpty()
+                prefilledMacAddress = result.mac
+                setupStatus.text = getString(R.string.camera_verified_status, result.source, result.model ?: result.brand)
+                setupStatus.setTextColor(getColor(R.color.status_green))
+                val msg = getString(R.string.onvif_success_msg, result.brand)
                 Toast.makeText(this@EditCameraActivity, msg, Toast.LENGTH_LONG).show()
             } else {
-                progressDialog.dismiss()
+                setupStatus.text = result.message
+                setupStatus.setTextColor(getColor(R.color.status_red))
                 Toast.makeText(this@EditCameraActivity, getString(R.string.onvif_fail_msg), Toast.LENGTH_SHORT).show()
             }
         }
@@ -182,44 +201,65 @@ class EditCameraActivity : AppCompatActivity() {
             return
         }
 
-        val (main, sub) = when (selectedBrand) {
-            "Hikvision" -> {
-                val base = "rtsp://$user:$pass@$ip:554/Streaming/Channels/"
-                Pair("${base}101", "${base}102")
-            }
-            "Dahua" -> {
-                val base = "rtsp://$user:$pass@$ip:554/cam/realmonitor?channel=1&subtype="
-                Pair("${base}0", "${base}1")
-            }
-            "Tiandy" -> {
-                val base = "rtsp://$user:$pass@$ip:554/1/"
-                Pair("${base}1", "${base}2")
-            }
-            "Uniview" -> {
-                val base = "rtsp://$user:$pass@$ip:554/unicast/c1/s"
-                Pair("${base}0/live", "${base}1/live")
-            }
-            "AJCloud" -> {
-                val base = "rtsp://$user:$pass@$ip:554/live/"
-                Pair("${base}ch0", "${base}ch1")
-            }
-            else -> Pair(etMain.text.toString(), etSub.text.toString())
-        }
+        val (main, sub) = CameraBrandProfiles.candidates(selectedBrand, ip, user, pass).firstOrNull()
+            ?: (etMain.text.toString() to etSub.text.toString())
 
         etMain.setText(main)
         etSub.setText(sub)
     }
 
-    private fun saveAndExit() {
+    private fun verifyAndSave() {
+        val ip = etIp.text.toString().trim()
+        val user = etUser.text.toString().trim()
+        val pass = etPass.text.toString()
+        if (ip.isBlank() || user.isBlank() || pass.isBlank()) {
+            Toast.makeText(this, R.string.fill_details_warning, Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        runCatching {
+            val userInfo = Regex("^rtsp://([^@]+)@", RegexOption.IGNORE_CASE)
+                .find(etMain.text.toString())?.groupValues?.get(1).orEmpty().split(':', limit = 2)
+            val urlUser = java.net.URLDecoder.decode(userInfo.getOrNull(0).orEmpty(), "UTF-8")
+            val urlPass = java.net.URLDecoder.decode(userInfo.getOrNull(1).orEmpty(), "UTF-8")
+            Log.d("ALADIN_CAMERA_SETUP", "Stored fields match stream credentials user=${urlUser == user} password=${urlPass == pass}")
+        }
+        val progress = AlertDialog.Builder(this).setMessage(R.string.verifying_camera_configuration).setCancelable(false).show()
         lifecycleScope.launch {
+            var mainUrl = etMain.text.toString().trim()
+            var subUrl = etSub.text.toString().trim()
+            var verified = if (mainUrl.isNotBlank()) RtspEndpointVerifier.verify(mainUrl, user, pass).playable else false
+            if (!verified) {
+                val result = CameraConfigurationResolver(this@EditCameraActivity).resolve(configurationInput(ip, user, pass))
+                verified = result.verified
+                if (verified) {
+                    selectedBrand = result.brand
+                    mainUrl = result.mainUrl.orEmpty()
+                    subUrl = result.subUrl ?: mainUrl
+                    cbPtz.isChecked = result.ptzSupported
+                    prefilledUuid = result.uuid.orEmpty()
+                    prefilledMacAddress = result.mac
+                    etMain.setText(mainUrl)
+                    etSub.setText(subUrl)
+                }
+            }
+            progress.dismiss()
+            if (!verified) {
+                setupStatus.text = getString(R.string.camera_verification_failed)
+                setupStatus.setTextColor(getColor(R.color.status_red))
+                Toast.makeText(this@EditCameraActivity, R.string.camera_verification_failed, Toast.LENGTH_LONG).show()
+                return@launch
+            }
             val camera = CameraEntity(
                 id = cameraId,
                 name = "Cam $displayOrder",
                 ipAddress = etIp.text.toString().trim(),
                 username = etUser.text.toString().trim(),
                 password = etPass.text.toString().trim(),
-                mainStreamUrl = etMain.text.toString().trim(),
-                subStreamUrl = etSub.text.toString().trim(),
+                onvifUsername = if (cbOnvifSame.isChecked) "" else etOnvifUser.text.toString().trim(),
+                onvifPassword = if (cbOnvifSame.isChecked) "" else etOnvifPass.text.toString(),
+                mainStreamUrl = mainUrl,
+                subStreamUrl = subUrl.ifBlank { mainUrl },
                 brand = selectedBrand,
                 ptzSupported = cbPtz.isChecked,
                 displayOrder = displayOrder,
@@ -227,6 +267,7 @@ class EditCameraActivity : AppCompatActivity() {
                 macAddress = prefilledMacAddress
             )
             if (viewModel.saveCameraChecked(camera)) {
+                setupStatus.text = getString(R.string.camera_ready_to_save)
                 Toast.makeText(this@EditCameraActivity, getString(R.string.cam_slot_saved, displayOrder), Toast.LENGTH_SHORT).show()
                 finish()
             } else {
@@ -234,4 +275,16 @@ class EditCameraActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun configurationInput(ip: String, user: String, pass: String) =
+        CameraConfigurationResolver.Input(
+            ip = ip,
+            username = user,
+            password = pass,
+            onvifUsername = if (cbOnvifSame.isChecked) null else etOnvifUser.text.toString().trim(),
+            onvifPassword = if (cbOnvifSame.isChecked) null else etOnvifPass.text.toString(),
+            brandHint = selectedBrand,
+            uuid = prefilledUuid,
+            mac = prefilledMacAddress
+        )
 }

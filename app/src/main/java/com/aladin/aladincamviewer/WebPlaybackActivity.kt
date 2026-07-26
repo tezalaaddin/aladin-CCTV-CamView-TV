@@ -16,6 +16,7 @@ class WebPlaybackActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_web_playback)
+        TvFocusManager.install(this)
 
         webView = findViewById(R.id.playback_webview)
         loader = findViewById(R.id.web_loader)

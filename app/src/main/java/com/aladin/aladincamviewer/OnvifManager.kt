@@ -27,6 +27,8 @@ class OnvifManager(private val ip: String, private val user: String, private val
         val manufacturer: String?,
         val model: String?,
         val firmware: String?,
+        val serial: String?,
+        val uuid: String? = null,
         val mainStreamUrl: String?,
         val subStreamUrl: String?,
         val ptzSupported: Boolean,
@@ -66,6 +68,7 @@ class OnvifManager(private val ip: String, private val user: String, private val
             val manufacturer = extractXmlTag(infoRes, "Manufacturer")
             val model = extractXmlTag(infoRes, "Model")
             val firmware = extractXmlTag(infoRes, "FirmwareVersion")
+            val serial = extractXmlTag(infoRes, "SerialNumber")
 
             val capSoap = createSoapEnvelope("<tds:GetCapabilities xmlns:tds=\"http://www.onvif.org/ver10/device/wsdl\"><tds:Category>All</tds:Category></tds:GetCapabilities>")
             val capRes = sendSoapRequest(serviceUrl, capSoap)
@@ -74,33 +77,24 @@ class OnvifManager(private val ip: String, private val user: String, private val
 
             val profilesSoap = createSoapEnvelope("<trt:GetProfiles xmlns:trt=\"http://www.onvif.org/ver10/media/wsdl\"/>")
             val profilesRes = sendSoapRequest(mediaUrl, profilesSoap)
-            val profileTokens = extractProfileTokens(profilesRes)
+            val profiles = extractProfiles(profilesRes)
 
-            if (profileTokens.isEmpty()) return@withContext null
-
-            val channels = mutableListOf<OnvifChannel>()
-            for (i in profileTokens.indices step 2) {
-                val mainToken = profileTokens[i]
-                val subToken = if (i + 1 < profileTokens.size) profileTokens[i+1] else mainToken
-                val mUrl = getStreamUri(mainToken)
-                val sUrl = getStreamUri(subToken)
-                
-                if (mUrl != null) {
-                    channels.add(OnvifChannel(
-                        channelNumber = (i / 2) + 1,
-                        name = "Channel ${(i / 2) + 1}",
-                        mainUrl = injectCredentials(mUrl) ?: "",
-                        subUrl = injectCredentials(sUrl ?: mUrl) ?: ""
-                    ))
-                }
+            val resolvedProfiles = profiles.mapNotNull { profile ->
+                getStreamUri(profile.token)?.let { profile to it }
+            }.sortedByDescending { it.first.pixels }
+            val mainUrl = resolvedProfiles.firstOrNull()?.second
+            val subUrl = resolvedProfiles.lastOrNull()?.second
+            val channels = resolvedProfiles.mapIndexed { index, entry ->
+                OnvifChannel(index + 1, entry.first.name.ifBlank { "Profile ${index + 1}" }, entry.second, entry.second)
             }
 
             return@withContext OnvifDeviceDetails(
                 manufacturer = manufacturer?.trim(),
                 model = model?.trim(),
                 firmware = firmware?.trim(),
-                mainStreamUrl = if (channels.isNotEmpty()) channels[0].mainUrl else null,
-                subStreamUrl = if (channels.isNotEmpty()) channels[0].subUrl else null,
+                serial = serial?.trim(),
+                mainStreamUrl = mainUrl,
+                subStreamUrl = subUrl,
                 ptzSupported = ptzUrl != null,
                 allChannels = channels
             )
@@ -182,12 +176,6 @@ class OnvifManager(private val ip: String, private val user: String, private val
         return extractXmlTag(res, "Uri")
     }
 
-    private fun injectCredentials(url: String?): String? {
-        if (url == null) return null
-        if (url.contains("@")) return url
-        return url.replace("rtsp://", "rtsp://$user:$pass@")
-    }
-
     private fun sendSoapRequest(urlStr: String, soap: String): String? {
         return try {
             val url = URL(urlStr)
@@ -216,16 +204,25 @@ class OnvifManager(private val ip: String, private val user: String, private val
         return if (matcher.find()) matcher.group(1) else null
     }
 
-    private fun extractProfileTokens(xml: String?): List<String> {
+    private data class ProfileInfo(val token: String, val name: String, val pixels: Long)
+
+    private fun extractProfiles(xml: String?): List<ProfileInfo> {
         if (xml == null) return emptyList()
-        val tokens = mutableListOf<String>()
-        val pattern = Pattern.compile("token=['\"]([^'\"]+)['\"]", Pattern.CASE_INSENSITIVE)
+        val profiles = mutableListOf<ProfileInfo>()
+        val pattern = Pattern.compile(
+            "<(?:[a-zA-Z0-9]+:)?Profiles\\b[^>]*token=['\"]([^'\"]+)['\"][^>]*>(.*?)</(?:[a-zA-Z0-9]+:)?Profiles>",
+            Pattern.CASE_INSENSITIVE or Pattern.DOTALL
+        )
         val matcher = pattern.matcher(xml)
         while (matcher.find()) {
-            val token = matcher.group(1)
-            if (token != null && !tokens.contains(token)) tokens.add(token)
+            val token = matcher.group(1) ?: continue
+            val body = matcher.group(2).orEmpty()
+            val name = extractXmlTag(body, "Name").orEmpty()
+            val width = extractXmlTag(body, "Width")?.toLongOrNull() ?: 0
+            val height = extractXmlTag(body, "Height")?.toLongOrNull() ?: 0
+            if (profiles.none { it.token == token }) profiles.add(ProfileInfo(token, name, width * height))
         }
-        return tokens
+        return profiles
     }
 
     private fun createSoapEnvelope(body: String): String {

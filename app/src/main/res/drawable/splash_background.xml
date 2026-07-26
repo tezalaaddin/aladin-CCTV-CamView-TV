@@ -2,8 +2,8 @@
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@android:color/black" />
     <item
-        android:drawable="@drawable/ic_banner"
+        android:drawable="@drawable/aladin_cctv_logo"
         android:gravity="center"
-        android:width="200dp"
-        android:height="112dp" />
+        android:width="260dp"
+        android:height="260dp" />
 </layer-list>

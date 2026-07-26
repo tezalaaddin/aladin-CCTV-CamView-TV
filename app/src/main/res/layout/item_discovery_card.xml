@@ -6,10 +6,11 @@
     android:layout_margin="6dp"
     android:focusable="true"
     android:clickable="true"
+    android:foreground="@drawable/camera_item_selector"
     app:cardBackgroundColor="#1F1F1F"
     app:cardCornerRadius="12dp"
-    app:strokeWidth="0dp"
-    app:strokeColor="@color/brand_orange">
+    app:strokeWidth="3dp"
+    app:strokeColor="@color/tv_focus_stroke">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -40,7 +41,7 @@
             android:layout_marginStart="10dp"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="MODEL: UNKNOWN"
+            android:text="@string/discovery_model_value"
             android:textColor="@color/white"
             android:textSize="14sp"
             android:textStyle="bold"
@@ -108,7 +109,7 @@
                     android:id="@+id/txt_mac"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="00:00:00:00:00:00"
+                    android:text="@string/unknown_value"
                     android:textColor="@color/white"
                     android:textSize="10sp" />
             </LinearLayout>
@@ -130,7 +131,7 @@
                     android:layout_height="wrap_content"
                     android:ellipsize="middle"
                     android:maxLines="1"
-                    android:text="Unknown FW"
+                    android:text="@string/unknown_value"
                     android:textColor="@color/white"
                     android:textSize="10sp" />
             </LinearLayout>
@@ -150,7 +151,7 @@
                     android:id="@+id/txt_protocols"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="ONVIF, PING"
+                    android:text="@string/unknown_value"
                     android:textColor="@color/brand_orange"
                     android:textSize="9sp"
                     android:textStyle="bold" />

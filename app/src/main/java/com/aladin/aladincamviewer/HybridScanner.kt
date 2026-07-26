@@ -70,6 +70,13 @@ class HybridScanner(private val context: Context) {
         }
         val result = getSortedDevices()
         Log.i("ALADIN_DISCOVERY", "Scan completed devices=${result.size} durationMs=${System.currentTimeMillis() - startedAt}")
+        result.forEach { device ->
+            Log.d(
+                "ALADIN_DISCOVERY",
+                "Result ip=${device.ip} brand=${device.brand} model=${device.model ?: "unknown"} " +
+                    "mac=${device.mac ?: "unknown"} protocols=${device.protocols.sorted().joinToString()}"
+            )
+        }
         onProgress(result)
         result
     }
@@ -258,7 +265,7 @@ class HybridScanner(private val context: Context) {
             val headers = StringBuilder()
             var count = 0
             while (reader.readLine().also { line = it } != null && count < 15) {
-                headers.append(line).append(" ")
+                headers.append(line).append('\n')
                 count++
             }
             socket.close()

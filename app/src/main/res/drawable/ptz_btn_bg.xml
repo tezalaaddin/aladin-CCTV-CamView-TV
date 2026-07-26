@@ -1,9 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ripple xmlns:android="http://schemas.android.com/apk/res/android" android:color="#40000000">
-    <item>
-        <shape android:shape="rectangle">
-            <solid android:color="@color/white" />
-            <corners android:radius="8dp" />
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <shape android:shape="oval">
+            <gradient android:angle="315" android:startColor="#FFFF9D28" android:endColor="#FFFF4D00" />
+            <stroke android:width="2dp" android:color="#FFFFFFFF" />
         </shape>
     </item>
-</ripple>
+    <item android:state_focused="true">
+        <shape android:shape="oval">
+            <solid android:color="#FF3A2518" />
+            <stroke android:width="3dp" android:color="@color/brand_orange_bright" />
+        </shape>
+    </item>
+    <item>
+        <shape android:shape="oval">
+            <gradient android:angle="315" android:startColor="#FF303034" android:endColor="#FF171719" />
+            <stroke android:width="1dp" android:color="#55FFFFFF" />
+        </shape>
+    </item>
+</selector>

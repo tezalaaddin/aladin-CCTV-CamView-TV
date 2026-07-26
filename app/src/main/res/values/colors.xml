@@ -8,4 +8,10 @@
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="brand_orange">#FF6D00</color>
+    <color name="brand_orange_bright">#FF9D28</color>
+    <color name="tv_surface">#171717</color>
+    <color name="tv_surface_focused">#2A1B10</color>
+    <color name="tv_focus_glow">#99FF6D00</color>
+    <color name="status_green">#59D26F</color>
+    <color name="status_red">#FF6B6B</color>
 </resources>

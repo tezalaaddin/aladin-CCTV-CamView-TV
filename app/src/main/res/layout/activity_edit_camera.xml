@@ -8,8 +8,8 @@
     <com.google.android.material.appbar.AppBarLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@android:color/transparent"
-        app:elevation="0dp">
+        android:background="@drawable/premium_top_bar"
+        app:elevation="10dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -25,6 +25,15 @@
                 android:textSize="26sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <ImageView
+                android:layout_width="56dp"
+                android:layout_height="56dp"
+                android:contentDescription="@string/app_name"
+                android:src="@drawable/aladin_cctv_logo"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
@@ -48,9 +57,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="#1F1F1F"
-                app:cardCornerRadius="12dp"
-                app:strokeColor="#33FFFFFF"
+                app:cardBackgroundColor="#EA1F1F22"
+                app:cardCornerRadius="20dp"
+                app:strokeColor="#55FF7A00"
                 app:strokeWidth="1dp">
 
                 <com.google.android.material.button.MaterialButton
@@ -70,8 +79,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="#1F1F1F"
-                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="#EA1F1F22"
+                app:cardCornerRadius="20dp"
                 app:strokeColor="#1AFFFFFF"
                 app:strokeWidth="1dp">
 
@@ -141,6 +150,57 @@
                         </com.google.android.material.textfield.TextInputLayout>
                     </LinearLayout>
 
+                    <CheckBox
+                        android:id="@+id/cb_onvif_same"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="10dp"
+                        android:checked="true"
+                        android:text="@string/onvif_same_credentials"
+                        android:textColor="@color/white" />
+
+                    <LinearLayout
+                        android:id="@+id/layout_edit_onvif_credentials"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="8dp"
+                        android:orientation="horizontal"
+                        android:visibility="gone">
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginEnd="8dp"
+                            android:layout_weight="1"
+                            android:hint="@string/onvif_user_label">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_onvif_user"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="admin"
+                                android:textColor="@color/white" />
+                        </com.google.android.material.textfield.TextInputLayout>
+
+                        <com.google.android.material.textfield.TextInputLayout
+                            style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1"
+                            android:hint="@string/onvif_pass_label"
+                            app:passwordToggleEnabled="true">
+
+                            <com.google.android.material.textfield.TextInputEditText
+                                android:id="@+id/et_onvif_pass"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:inputType="textPassword"
+                                android:textColor="@color/white" />
+                        </com.google.android.material.textfield.TextInputLayout>
+                    </LinearLayout>
+
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
@@ -171,6 +231,18 @@
                             android:textAllCaps="false"
                             app:cornerRadius="8dp" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/txt_setup_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:background="@drawable/premium_panel_background"
+                        android:padding="14dp"
+                        android:text="@string/camera_setup_waiting"
+                        android:textColor="#AAFFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
                 </LinearLayout>
             </com.google.android.material.card.MaterialCardView>
 
@@ -179,8 +251,8 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="20dp"
-                app:cardBackgroundColor="#1F1F1F"
-                app:cardCornerRadius="12dp"
+                app:cardBackgroundColor="#EA1F1F22"
+                app:cardCornerRadius="20dp"
                 app:strokeColor="#1AFFFFFF"
                 app:strokeWidth="1dp">
 

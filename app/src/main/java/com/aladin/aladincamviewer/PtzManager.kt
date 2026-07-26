@@ -28,6 +28,8 @@ class PtzManager(private val camera: CameraModel) {
     private var cachedProfileToken: String? = null
     private var cachedPtzUri: String? = null
     private var actualPort: Int? = null
+    private val onvifUser get() = camera.onvifUsername.ifBlank { camera.username }
+    private val onvifPass get() = camera.onvifPassword.ifBlank { camera.password }
 
     // 8-Way Movement
     fun moveUp() = executePtz { token -> getContinuousMoveEnvelope(token, 0.0f, 1.0f) }
@@ -143,7 +145,7 @@ class PtzManager(private val camera: CameraModel) {
         val nonce = Base64.encodeToString(ByteArray(16).also { SecureRandom().nextBytes(it) }, Base64.NO_WRAP)
         val created = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(Date())
         val digest = try {
-            val combined = Base64.decode(nonce, Base64.DEFAULT) + created.toByteArray() + camera.password.toByteArray()
+            val combined = Base64.decode(nonce, Base64.DEFAULT) + created.toByteArray() + onvifPass.toByteArray()
             Base64.encodeToString(MessageDigest.getInstance("SHA-1").digest(combined), Base64.NO_WRAP)
         } catch (e: Exception) { "" }
         
@@ -153,7 +155,7 @@ class PtzManager(private val camera: CameraModel) {
                 <s:Header>
                     <wsse:Security xmlns:wsse="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-secext-1.0.xsd" xmlns:wsu="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-wssecurity-utility-1.0.xsd">
                         <wsse:UsernameToken>
-                            <wsse:Username>${camera.username}</wsse:Username>
+                            <wsse:Username>$onvifUser</wsse:Username>
                             <wsse:Password Type="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-username-token-profile-1.0#PasswordDigest">$digest</wsse:Password>
                             <wsse:Nonce EncodingType="http://docs.oasis-open.org/wss/2004/01/oasis-200401-wss-soap-message-security-1.0#Base64Binary">$nonce</wsse:Nonce>
                             <wsu:Created>$created</wsu:Created>

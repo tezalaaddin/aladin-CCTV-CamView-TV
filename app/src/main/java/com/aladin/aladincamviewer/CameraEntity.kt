@@ -16,6 +16,8 @@ data class CameraEntity(
     val ipAddress: String,
     val username: String,
     val password: String,
+    val onvifUsername: String = "",
+    val onvifPassword: String = "",
     val mainStreamUrl: String,
     val subStreamUrl: String,
     val brand: String = "Custom",

@@ -1,6 +1,6 @@
 # AladinCamViewer — Proje Haritası ve Geliştirme Talimatları
 
-> Son doğrulama: 25 Temmuz 2026
+> Son doğrulama: 26 Temmuz 2026
 >
 > Belge kapsamı: Güncel `master` çalışma ağacı; kesin sürüm için `git log` kullanılır
 >
@@ -66,14 +66,14 @@ Uygulama bir bulut/NVR sunucusu değildir. Kamera akışlarına cihazdan doğrud
 | Android | compile/target SDK 35, min SDK 24, Java/JVM 11 |
 | Yapı | Tek `app` modülü; Activity + ViewModel + Repository yaklaşımı |
 | Video | LibVLC `3.6.5` (`libvlc-all`) |
-| Veri | Room 2.8.4, şema sürümü 3, KSP2 |
+| Veri | Room 2.8.4, şema sürümü 4, KSP2 |
 | Ağ | OkHttp 4.12.0, UDP WS-Discovery, Android NSD/mDNS, soket/ping taraması |
 | UI | AppCompat/Material, XML layout, RecyclerView, özel `RadarView` |
 | Serileştirme | kotlinx.serialization JSON |
 | Güvenlik | AndroidX Security; geliştirme durumundaki mevcut yaklaşım Bölüm 10’da |
-| Paket | `com.aladin.aladincamviewer`, versionName `1.2`, versionCode `3` |
+| Paket | `com.aladin.aladincamviewer`, versionName `1.3`, versionCode `4` |
 
-LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu nedenle `armeabi-v7a` ve `arm64-v8a` için ayrı APK üretilir; evrensel APK kapalıdır. Release derlemesinde R8 küçültme ve kaynak küçültme açıktır. Media3 bağımlılık sürümleri katalogda kalmış olsa da `app` modülünün aktif oynatma bağımlılıklarına eklenmemiştir.
+LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu nedenle `armeabi-v7a`, `arm64-v8a`, `x86` ve `x86_64` için ayrı APK üretilir; evrensel APK kapalıdır. AAB derlemesinde ABI split otomatik kapatılır; Google Play hedef cihaza uygun paketi AAB içinden üretir. Release derlemesinde R8 küçültme ve kaynak küçültme açıktır. Media3 bağımlılık sürümleri katalogda kalmış olsa da `app` modülünün aktif oynatma bağımlılıklarına eklenmemiştir.
 
 ---
 
@@ -140,6 +140,7 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 - `app/build.gradle.kts`: Android, ABI split, release küçültme ve uygulama bağımlılıkları.
 - `app/proguard-rules.pro`: Release küçültme/obfuscation kuralları.
 - `README.md`: Kurulum, derleme, güvenli örnekler ve hızlı Logcat kullanımı.
+- `RELEASE_NOTES_v1.3.md`: v1.3 kullanıcıya dönük değişiklik özeti, uyumluluk, doğrulama ve dağıtım notları.
 - `scripts/logcat-aladin.ps1`: Bağlı cihazdan yalnızca proje tanı etiketlerini gösteren PowerShell aracı.
 - `.github/workflows/secret-scan.yml`: GitHub’a gönderilen içerikte kimlik bilgisi benzeri sırları tarayan CI işi.
 - `.githooks/pre-commit`: Commit öncesi yerel gizli bilgi taramasını çalıştırır.
@@ -153,13 +154,17 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 - `SecurityUtils.kt`: `checkPin` ile ayarlara erişim öncesi PIN diyaloğu/doğrulaması yapar.
 - `LocaleHelper.kt`: `setLocale` ile seçili TR/EN locale bağlamını üretir.
 - `SnapshotUtils.kt`: `takeSnapshot` ile görünümden kare almayı, uygun yüzeyi bulmayı ve resmi saklamayı yönetir.
+- `TvFocusManager.kt`: Tüm Activity’lerde etkileşimli öğeleri D-pad odağına hazırlar; odaklanan kart, buton, form alanı ve kontrol için turuncu çift halo, stroke, yükselme ve kısa ölçek animasyonu uygular. Yeni ekranlar `setContentView` sonrasında `TvFocusManager.install(this)` çağırmalıdır.
 
 ### 5.3 UI ve ViewModel katmanı
 
 - `MainActivity.kt`: Ana ızgara, sayfalama, kumanda girişleri, ağ durumu ve DHCP kurtarma onay diyaloğunun sahibidir.
 - `MainViewModel.kt`: Kamera Flow’unu UI modeline taşır; ana ekran veri durumunu yönetir.
 - `CameraAdapter.kt`: Kamera hücrelerini bağlar, VLC oynatıcılarını başlatır/durdurur, odak/ses ve geri dönüşüm kaynaklarını yönetir.
-- `FullScreenCameraActivity.kt`: Tek kamera oynatma, D-pad girişleri, PTZ modu, sekiz yön, optik zoom, tur ve saat davranışı.
+- `FullScreenCameraActivity.kt`: Tek kamera oynatma, D-pad girişleri, dört ana yönlü PTZ modu, optik zoom, tur ve saat davranışı.
+- `CameraConfigurationResolver.kt`: Discovery ve düzenleme ekranlarının ortak kamera kurulum hattı; önce seçili marka profilinin ana/alt RTSP yayınlarını doğrular, ONVIF’i bağımsız metadata/PTZ kaynağı olarak çalıştırır ve marka yolları başarısızsa doğrulanmış ONVIF stream URI’lerini yedek olarak kullanır.
+- `RtspEndpointVerifier.kt`: RTSP `DESCRIBE` ile Basic/Digest kimlik doğrulaması ve yayın yolu kontrolü yapar; loglarda kullanıcı adı/parola yerine yalnız güvenli endpoint bilgisini kullanır.
+- `CameraBrandProfiles.kt`: Hikvision, Dahua, Tiandy, Uniview, Reolink, Axis, Hanwha, Vivotek, Foscam, Tapo, AJCloud ve XMeye için bilinen ana/alt yayın yollarını merkezi olarak tanımlar.
 - `SettingsActivity.kt`: Kamera yuvaları, dil seçimi, yapılandırma içe/dışa aktarma, tanı ve ayar ekranı olayları.
 - `SettingsViewModel.kt`: Kamera listesi, PIN/offline alarm tercihleri ve JSON içe/dışa aktarma işlemleri.
 - `EditCameraActivity.kt`: Kamera formu, marka/yol üretimi, silme, ortak ayar uygulama, ONVIF onarma ve mükerrer IP kontrollü kaydetme.
@@ -194,7 +199,7 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 - `CameraEntity.kt`: Room’daki `cameras` tablosu; ad, benzersiz IP, kullanıcı/parola, ana/alt RTSP URL, marka, PTZ, sıra, UUID ve MAC alanları.
 - `CameraDao.kt`: Kamera Flow’u, ABORT insert/insertAll, update/delete, ID sorgusu ve `countByIp` işlemleri.
 - `CameraRepository.kt`: DAO’yu UI/ağ katmanlarından ayırır; CRUD ve `isIpAlreadyUsed` sağlar.
-- `AppDatabase.kt`: Room singleton, şema sürümü 3 ve `MIGRATION_1_2`/`MIGRATION_2_3` geçişleri.
+- `AppDatabase.kt`: Room singleton, şema sürümü 4 ve `MIGRATION_1_2`/`MIGRATION_2_3`/`MIGRATION_3_4` geçişleri.
 - `CameraModel.kt`: Oynatma/UI için kullanılan kamera modeli ve entity dönüşümü.
 - `DiscoveryDevice.kt`: Keşfedilen IP, port/protokol, marka/model, UUID ve MAC bilgileri.
 - `ConfigModel.kt`: JSON dışa/içe aktarma veri biçimi.
@@ -203,7 +208,7 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 
 - `res/layout/activity_main.xml`: Ana kamera ızgarası ve sayfa kontrolleri.
 - `res/layout/item_camera.xml`: Her VLC kamera hücresinin görünümü.
-- `res/layout/activity_full_screen.xml`: Tam ekran video ve PTZ paneli.
+- `res/layout/activity_full_screen.xml`: Tam ekran video; canlı durum/saati gösteren premium üst bar, büyük kumanda hedefli kamera araçları ve dört ana yön + zoom içeren yarı saydam PTZ paneli.
 - `res/layout/activity_settings.xml`, `item_camera_slot.xml`: Ayarlar ve kamera yuvaları.
 - `res/layout/activity_edit_camera.xml`: Kamera formu.
 - `res/layout/activity_discovery.xml`, `item_discovery_card.xml`, `dialog_batch_credentials.xml`: Ağ keşfi ve toplu ekleme.
@@ -211,8 +216,9 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 - `res/layout/activity_web_playback.xml`: WebView fallback ekranı.
 - `res/values/strings.xml`, `res/values-tr/strings.xml`: İngilizce/Türkçe metinler. Kullanıcıya gösterilen yeni metinler iki dosyaya da eklenmelidir.
 - `res/drawable/camera_item_selector.xml`: TV odağı çerçevesi.
+- `res/drawable-nodpi/aladin_cctv_logo.png`: Aladin Player marka ailesinden türetilen, diyafram/lens motifli özgün Aladin CCTV uygulama logosu; launcher, üst menü, splash ve TV banner tarafından kullanılır.
 - `res/drawable/led_online.xml`, `led_offline.xml`: Bağlantı göstergeleri.
-- `res/drawable/ptz_btn_bg.xml`, `res/values/styles.xml`: PTZ kontrol görünümü.
+- `res/drawable/ptz_btn_bg.xml`, `res/drawable/premium_panel_background.xml`, `res/drawable/premium_top_bar.xml`, `res/color/premium_action_tint.xml`, `res/values/styles.xml`: Ana menü, tam ekran araçları ve PTZ kontrollerinin ortak premium görünüm/durum kaynakları.
 - `res/xml/backup_rules.xml`, `data_extraction_rules.xml`: Android yedekleme kuralları.
 - `AndroidManifest.xml`: İzinler, TV launcher, Activity ve boot receiver tanımları. Yerel RTSP/HTTP cihazları nedeniyle cleartext trafik şu an açıktır.
 
@@ -227,7 +233,8 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 | `id` | Otomatik artan yerel anahtar |
 | `name` | Kullanıcıya görünen kamera adı |
 | `ipAddress` | Kamera host/IP; veritabanında benzersiz |
-| `username`, `password` | Kamera kimlik bilgileri; loglanmamalı |
+| `username`, `password` | RTSP kimlik bilgileri; loglanmamalı |
+| `onvifUsername`, `onvifPassword` | Ayrı ONVIF hesabı; boşsa RTSP kimlik bilgileri kullanılır |
 | `mainStreamUrl`, `subStreamUrl` | Ana ve düşük kaynaklı RTSP akışları |
 | `brand` | URL üretimi, onarım ve aday filtreleme ipucu |
 | `ptzSupported` | Tam ekran PTZ kontrollerinin kullanılabilirliği |
@@ -290,14 +297,16 @@ Mevcut birim testleri:
 - `CameraIdentityMatcherTest.kt`: UUID/MAC normalizasyonu, geçersiz UUID reddi, kimliksiz eşleşmeme ve marka uyumu.
 - `RetryPolicyTest.kt`: Retry gecikme dizisi ve sınır davranışı.
 - `PlaybackStallDetectorTest.kt`: İlerleyen, sabit kalan, kullanılamayan ve sıfırlanan medya saati senaryoları.
+- `CameraBrandProfilesTest.kt`: Marka eş adları, RTSP kimlik bilgisi kodlama ve aday URL tekilleştirme davranışı.
 - `ExampleUnitTest.kt`: Temel örnek test; anlamlı proje testiyle değiştirilmesi önerilir.
 - `ExampleInstrumentedTest.kt`: Temel cihaz testi; Room migration ve TV akışlarıyla genişletilmelidir.
 
 TV kontrol listesi:
 
-- APK doğru ABI için üretildi mi (`armeabi-v7a` veya `arm64-v8a`)?
+- APK doğru ABI için üretildi mi (`armeabi-v7a`, `arm64-v8a`, `x86` veya `x86_64`)?
 - Ana/alt RTSP akışları açılıyor ve player kaynakları ekran geçişinde bırakılıyor mu?
 - D-pad odağı tüm ekranlarda görünür ve geri dönüşlü mü?
+- Odaklanan öğe; kamera görüntüsü, menü, buton, form alanı ve liste kartlarının her birinde turuncu halo/çerçeve ve yükselme ile açıkça ayırt ediliyor mu?
 - Ağ kesilip geldiğinde retry ve kurtarma doğru mu?
 - UUID/MAC eşleşmesi otomatik; kimliksiz eşleşme onaylı mı?
 - Aynı IP ekleme UI’da ve veritabanında reddediliyor mu?
@@ -336,7 +345,7 @@ TV kontrol listesi:
 
 - RTSP yeniden deneme politikası, ağ durumu takibi ve ayrıntılı geliştirme logları eklendi.
 - ONVIF/PTZ istekleri ve kamera yapılandırma işlemleri düzenlendi.
-- LibVLC boyutunu azaltmak için ABI split (`armeabi-v7a`, `arm64-v8a`) etkinleştirildi.
+- LibVLC boyutunu azaltmak için ABI split (`armeabi-v7a`, `arm64-v8a`, `x86`, `x86_64`) etkinleştirildi; AAB ve split APK görevleri uyumlu biçimde ayrıldı.
 - Gerçek RTSP parolaları Git geçmişinden temizlendi; yerel ve CI gizli bilgi taraması eklendi.
 - Gradle 9.5.0, AGP 9.3.1, Kotlin 2.2.10, KSP2 2.3.2 ve Room 2.8.4 uyumluluğu sağlandı.
 
@@ -366,3 +375,28 @@ TV kontrol listesi:
 - Zaman damgası bozuk RTSP akışlarında LibVLC’nin varsayılan saat düzeltmesini devre dışı bırakan `clock-jitter=0` kaldırıldı.
 - Gerçek Android TV testinde iki ızgara akışının gösterilen/çözülen kare sayaçlarının sürekli ilerlediği ve önceki yaklaşık 30 saniyelik decoder donmasının ortadan kalktığı doğrulandı.
 - Aynı gerçek cihaz oturumunda DHCP ile IP’si değişen kamera, uygulama yeniden açıldığında UUID/MAC tabanlı kurtarma akışıyla otomatik olarak güncellendi.
+
+### 25 Temmuz 2026 — Premium Android TV odak sistemi ve CCTV marka kimliği
+
+- `TvFocusManager` ile ana ekran, tam ekran, ayarlar, kamera düzenleme, keşif, tanı ve web ekranlarında ortak D-pad odak dili oluşturuldu.
+- Odak görünürlüğü; turuncu çift katmanlı halo, bileşen stroke’u, kısa ölçek animasyonu ve yükselme/gölge ile güçlendirildi.
+- Kamera, kamera yuvası ve keşif kartlarına parent focus durumunu doğrudan çizen foreground selector eklendi.
+- Aladin Player referansındaki A/play karakteri korunarak merkezinde kamera diyaframı bulunan özgün Aladin CCTV logosu üretildi.
+- Yeni logo launcher/round icon, splash, Android TV banner ve ana ekran üst menüsüne uygulandı.
+- Splash ekranında logo kare `260dp` alanda en-boy oranı korunarak ve TV izleme mesafesine uygun daha büyük boyutta gösterilir.
+- Ana ekran üst barı daha güçlü marka hiyerarşisi, 54dp kumanda hedefleri, durum çerçeveleri ve monospace saat ile yenilendi.
+- Tam ekran görünümüne canlı durum göstergesi, seçili kalabilen PTZ düğmesi ve işlevsel anlık görüntü düğmesi içeren kamera araçları paneli eklendi.
+- PTZ paneli dört ana yönü uzaktan okunabilir, aynı standarttaki fiziksel düğme görünümüyle sunar; çapraz kontroller kaldırıldı. Zoom alanında aynı tasarımda `− / +` düğmeleri bulunur ve PTZ modunda kumandanın `Kanal − / Kanal +` (eşdeğer cihazlarda Page Down/Page Up) tuşları uzaklaştırma/yakınlaştırma yapar.
+- Ağ keşif kartları model, MAC, firmware ve protokol alanlarını sabit örneklerden değil doğrudan `DiscoveryDevice` sonucundan gösterir. Kamera ekleme ekranı yalnız ONVIF, RTSP veya üretici SDK izi bulunan adayları listeler; ping-only modem/telefon/TV gibi genel ağ cihazlarını `ALADIN_DISCOVERY` loglarında tutar ancak kamera olarak sunmaz.
+- Discovery toplu ekleme kullanıcı onayından önce marka profilindeki ana/alt RTSP yollarını ayrı ayrı sınar; aynı işlemde ONVIF `GetDeviceInformation`, `GetCapabilities`, `GetProfiles` ve `GetStreamUri` verilerini metadata/PTZ için toplar. Marka profili çalışmıyorsa ONVIF profilleri çözünürlüğe göre ana/alt yayın olarak sıralanıp doğrulanmış yedek olarak kullanılır.
+- ONVIF kullanılamadığında merkezi marka profilleri sırayla denenir; yalnız kimlik doğrulamalı ve oynatılabilir yol kaydedilir. Sonuç özeti başarılı/başarısız kameraları kullanıcıya gösterir ve yalnız doğrulananlar eklenir.
+- Kamera düzenleme ekranındaki “Keşfet ve doğrula” aynı çözümleyiciyi kullanır; “Kaydet” de mevcut veya yeniden bulunan ana RTSP yayınını doğrulamadan veritabanını güncellemez.
+- Kamera düzenleme ve toplu kimlik bilgisi ekranları premium koyu panel, marka vurgusu, durum kartı ve TV odağına uygun büyük kontrol hedefleri kullanır.
+- RTSP ve ONVIF hesapları ayrı olabilir. `CameraEntity` veritabanı v4 ile `onvifUsername/onvifPassword` alanlarını saklar; boş değerler “RTSP ile aynı” anlamına gelir. UI’da bu seçenek varsayılan açıktır, kapatıldığında ayrı ONVIF alanları görünür ve PTZ komutları bu hesabı kullanır.
+
+### 26 Temmuz 2026 — v1.3 release hazırlığı
+
+- Uygulama sürümü `versionName 1.3` ve `versionCode 4` olarak güncellendi.
+- AAB derlemesinde ABI split otomatik kapatılarak dört ABI'nin tek bundle içinde paketlenmesi; APK derlemesinde ise dört ayrı mimari çıktısı üretilmesi sağlandı.
+- `RELEASE_NOTES_v1.3.md` eklendi; README aktif LibVLC motoru, v1.3 özellikleri, ayrı RTSP/ONVIF hesapları ve güncel dağıtım mimarileriyle eşitlendi.
+- Unit test, lint, R8 release derlemesi, ABI içeriği ve sabit kimlik bilgisi taraması başarıyla doğrulandı.

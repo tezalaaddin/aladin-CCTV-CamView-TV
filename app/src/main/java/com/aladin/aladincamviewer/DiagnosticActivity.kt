@@ -22,6 +22,7 @@ class DiagnosticActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_diagnostic)
+        TvFocusManager.install(this)
         logView = findViewById(R.id.diag_log)
         appendLog("RTSP diagnostic mode (LibVLC)")
 

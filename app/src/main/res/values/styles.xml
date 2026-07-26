@@ -1,14 +1,21 @@
 <resources>
     <style name="PtzBtn">
-        <item name="android:layout_width">0dp</item>
-        <item name="android:layout_height">0dp</item>
-        <item name="android:layout_columnWeight">1</item>
-        <item name="android:layout_rowWeight">1</item>
-        <item name="android:layout_margin">4dp</item>
+        <item name="android:layout_width">68dp</item>
+        <item name="android:layout_height">68dp</item>
         <item name="android:background">@drawable/ptz_btn_bg</item>
-        <item name="android:padding">10dp</item>
+        <item name="android:padding">18dp</item>
         <item name="android:scaleType">fitCenter</item>
-        <item name="tint">@color/black</item>
+        <item name="tint">@color/white</item>
         <item name="android:focusable">false</item>
+    </style>
+    <style name="PtzZoomBtn">
+        <item name="android:layout_width">68dp</item>
+        <item name="android:layout_height">68dp</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:gravity">center</item>
+        <item name="android:focusable">false</item>
+        <item name="android:stateListAnimator">@null</item>
     </style>
 </resources>

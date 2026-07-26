@@ -5,6 +5,10 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+val isBundleBuild = gradle.startParameter.taskNames.any { taskName ->
+    taskName.contains("bundle", ignoreCase = true)
+}
+
 android {
     namespace = "com.aladin.aladincamviewer"
     compileSdk = 35
@@ -13,8 +17,8 @@ android {
         applicationId = "com.aladin.aladincamviewer"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.2"
+        versionCode = 4
+        versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -25,9 +29,11 @@ android {
     // instead of shipping both 32-bit and 64-bit engines to every device.
     splits {
         abi {
-            isEnable = true
+            // Android Gradle Plugin cannot build an AAB while ABI APK splits are enabled.
+            // AAB already lets Google Play generate device-specific APKs automatically.
+            isEnable = !isBundleBuild
             reset()
-            include("armeabi-v7a", "arm64-v8a")
+            include("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
             isUniversalApk = false
         }
     }

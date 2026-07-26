@@ -14,6 +14,8 @@ data class CameraModel(
     val ptzSupported: Boolean = false,
     val username: String = "",
     val password: String = "",
+    val onvifUsername: String = "",
+    val onvifPassword: String = "",
     val brand: String = "Custom"
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
@@ -22,6 +24,8 @@ data class CameraModel(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readByte() != 0.toByte(),
+        parcel.readString() ?: "",
+        parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "Custom"
@@ -35,6 +39,8 @@ data class CameraModel(
         parcel.writeByte(if (ptzSupported) 1 else 0)
         parcel.writeString(username)
         parcel.writeString(password)
+        parcel.writeString(onvifUsername)
+        parcel.writeString(onvifPassword)
         parcel.writeString(brand)
     }
 

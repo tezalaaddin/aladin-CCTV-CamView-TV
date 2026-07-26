@@ -2,8 +2,10 @@ package com.aladin.aladincamviewer
 
 import android.content.Context
 import android.os.Bundle
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
+import android.util.Log
 import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
@@ -56,6 +58,7 @@ class FullScreenCameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_full_screen)
+        TvFocusManager.install(this)
 
         videoLayout = findViewById(R.id.full_player_view)
         progressBar = findViewById(R.id.loading_progress)
@@ -123,6 +126,16 @@ class FullScreenCameraActivity : AppCompatActivity() {
                     }
                     return true
                 }
+                KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_PAGE_UP -> {
+                    Log.d("ALADIN_PTZ", "Remote zoom key action=${if (action == KeyEvent.ACTION_DOWN) "in" else "stop"} keyCode=$keyCode")
+                    if (action == KeyEvent.ACTION_DOWN) ptzManager?.zoomIn() else ptzManager?.stop()
+                    return true
+                }
+                KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> {
+                    Log.d("ALADIN_PTZ", "Remote zoom key action=${if (action == KeyEvent.ACTION_DOWN) "out" else "stop"} keyCode=$keyCode")
+                    if (action == KeyEvent.ACTION_DOWN) ptzManager?.zoomOut() else ptzManager?.stop()
+                    return true
+                }
                 KeyEvent.KEYCODE_BACK -> {
                     if (action == KeyEvent.ACTION_UP) {
                         togglePtzMode(false)
@@ -139,15 +152,20 @@ class FullScreenCameraActivity : AppCompatActivity() {
             togglePtzMode(!isPtzMode)
         }
 
-        // On-screen touch/click mapping (8 directions + zoom)
+        findViewById<View>(R.id.btn_snapshot)?.setOnClickListener {
+            val playerView = videoLayout ?: return@setOnClickListener
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                SnapshotUtils.takeSnapshot(playerView, camTitle?.text?.toString().orEmpty())
+            } else {
+                Toast.makeText(this, R.string.snapshot_not_supported, Toast.LENGTH_SHORT).show()
+            }
+        }
+
+        // On-screen touch mapping (4 directions + zoom)
         mapPtz(R.id.ptz_up) { ptzManager?.moveUp() }
         mapPtz(R.id.ptz_down) { ptzManager?.moveDown() }
         mapPtz(R.id.ptz_left) { ptzManager?.moveLeft() }
         mapPtz(R.id.ptz_right) { ptzManager?.moveRight() }
-        mapPtz(R.id.ptz_up_left) { ptzManager?.moveUpLeft() }
-        mapPtz(R.id.ptz_up_right) { ptzManager?.moveUpRight() }
-        mapPtz(R.id.ptz_down_left) { ptzManager?.moveDownLeft() }
-        mapPtz(R.id.ptz_down_right) { ptzManager?.moveDownRight() }
         mapPtz(R.id.ptz_zoom_in) { ptzManager?.zoomIn() }
         mapPtz(R.id.ptz_zoom_out) { ptzManager?.zoomOut() }
     }
@@ -164,6 +182,7 @@ class FullScreenCameraActivity : AppCompatActivity() {
 
     private fun togglePtzMode(enabled: Boolean) {
         isPtzMode = enabled
+        findViewById<View>(R.id.btn_ptz_toggle)?.isSelected = enabled
         ptzOverlay?.visibility = if (isPtzMode) View.VISIBLE else View.GONE
         
         if (isPtzMode) {

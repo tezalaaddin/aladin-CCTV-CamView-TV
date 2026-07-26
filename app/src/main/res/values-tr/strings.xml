@@ -51,8 +51,23 @@
 
     <string name="user_label">KULLANICI</string>
     <string name="pass_label">ŞİFRE</string>
-    <string name="fix_btn">DÜZELT / OTOMATİK ONAR</string>
-    <string name="template_btn">ŞABLONDAN OLUŞTUR</string>
+    <string name="fix_btn">KAMERAYI KEŞFET VE DOĞRULA</string>
+    <string name="template_btn">BİLİNEN MARKA PROFİLİNİ KULLAN</string>
+    <string name="camera_setup_waiting">Kamera henüz doğrulanmadı</string>
+    <string name="verifying_cameras">KAMERALAR DOĞRULANIYOR</string>
+    <string name="verifying_camera_progress">%1$d kameradan ilki hazırlanıyor…</string>
+    <string name="verifying_camera_named">Doğrulanıyor %1$d/%2$d  •  %3$s</string>
+    <string name="camera_verification_summary">%1$d/%2$d kamera doğrulandı</string>
+    <string name="add_verified">DOĞRULANANLARI EKLE</string>
+    <string name="camera_verified_status">%1$s İLE DOĞRULANDI  •  %2$s</string>
+    <string name="verifying_camera_configuration">Kimlik, kullanıcı bilgileri ve RTSP yayını doğrulanıyor…</string>
+    <string name="camera_verification_failed">Kamera kimlik bilgileri veya oynatılabilir yayın doğrulanamadı</string>
+    <string name="camera_ready_to_save">Kamera yapılandırması doğrulandı</string>
+    <string name="batch_credentials_intro">Kaydetmeden önce her kamerada oturum açılacak; ONVIF profilleri ve RTSP yayınları test edilecektir.</string>
+    <string name="rtsp_credentials">RTSP YAYIN KİMLİK BİLGİLERİ</string>
+    <string name="onvif_same_credentials">ONVIF aynı kimlik bilgilerini kullanıyor</string>
+    <string name="onvif_user_label">ONVIF kullanıcı adı</string>
+    <string name="onvif_pass_label">ONVIF parolası (boş olabilir)</string>
     <string name="main_rtsp_label">ANA YAYIN RTSP URL</string>
     <string name="sub_rtsp_label">ALT YAYIN RTSP URL</string>
     <string name="ptz_enabled_label">PTZ Desteği Etkin</string>
@@ -101,6 +116,12 @@
     <string name="playback_title">Kayıt İzleme Zamanı Seçin</string>
     <string name="start_playback">Kayıttan Oynat</string>
     <string name="live_stream">Canlı</string>
+    <string name="camera_controls">KAMERA ARAÇLARI</string>
+    <string name="ptz_action">PTZ KONTROLÜ</string>
+    <string name="snapshot_action">GÖRÜNTÜ AL</string>
+    <string name="direction_control">YÖN KONTROLÜ</string>
+    <string name="snapshot_not_supported">Anlık görüntü için Android 8 veya üzeri gerekir</string>
+    <string name="zoom_remote_hint">KUMANDA  CH − / +</string>
     <string name="playback_mode">KAYIT İZLEME MODU</string>
     <string name="auto_filled_cam">Kamera %1$d Otomatik Dolduruldu</string>
     <string name="scanning_onvif">ONVIF cihazları taranıyor...</string>
@@ -115,5 +136,7 @@
     <string name="camera_ip_change_confirm">%1$s kamerasına %2$s adresinden ulaşılamıyor. %3$s adresinde uyumlu bir kamera bulundu (MAC: %4$s). Kayıtlı kamera için bu adres kullanılsın mı?</string>
     <string name="use_new_camera_ip">YENİ IP’Yİ KULLAN</string>
     <string name="unknown_value">Bilinmiyor</string>
+    <string name="discovery_model_value">MODEL: %1$s</string>
+    <string name="add_selected_default">SEÇİLENLERİ EKLE</string>
     <string name="duplicate_camera_ip">Bu IP adresine sahip bir kamera zaten kayıtlı.</string>
 </resources>

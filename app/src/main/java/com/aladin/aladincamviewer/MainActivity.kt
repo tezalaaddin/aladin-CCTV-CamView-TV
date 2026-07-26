@@ -59,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.Theme_AladinCamViewer)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        TvFocusManager.install(this)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
@@ -204,6 +205,8 @@ class MainActivity : AppCompatActivity() {
         ptzSupported = ptzSupported,
         username = username,
         password = password,
+        onvifUsername = onvifUsername,
+        onvifPassword = onvifPassword,
         brand = brand
     )
 

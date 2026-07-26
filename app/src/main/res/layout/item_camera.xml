@@ -7,20 +7,18 @@
     android:focusable="true"
     android:focusableInTouchMode="true"
     android:clickable="true"
+    android:foreground="@drawable/camera_item_selector"
     app:cardBackgroundColor="@android:color/black"
     app:cardCornerRadius="4dp"
-    app:strokeWidth="0dp">
-
-    <!-- Focus Highlighter -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/camera_item_selector" />
+    app:contentPadding="4dp"
+    app:strokeColor="@color/tv_focus_stroke"
+    app:strokeWidth="4dp">
 
     <org.videolan.libvlc.util.VLCVideoLayout
         android:id="@+id/player_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_margin="2dp" />
 
     <!-- Placeholder for Empty State -->
     <LinearLayout

@@ -6,15 +6,11 @@
     android:layout_margin="6dp"
     android:focusable="true"
     android:clickable="true"
+    android:foreground="@drawable/camera_item_selector"
     app:cardBackgroundColor="#1F1F1F"
     app:cardCornerRadius="12dp"
-    app:strokeWidth="0dp">
-
-    <!-- Focus Highlighter -->
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@drawable/camera_item_selector" />
+    app:strokeColor="@color/tv_focus_stroke"
+    app:strokeWidth="3dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
