@@ -62,7 +62,7 @@
                     android:text="@string/live_stream"
                     android:textAllCaps="true"
                     android:textColor="@color/brand_orange_bright"
-                    android:textSize="10sp"
+                    android:textSize="11sp"
                     android:textStyle="bold" />
             </LinearLayout>
         </LinearLayout>
@@ -109,7 +109,7 @@
                 android:paddingBottom="10dp"
                 android:text="@string/camera_controls"
                 android:textColor="#AAFFFFFF"
-                android:textSize="10sp"
+                android:textSize="11sp"
                 android:textStyle="bold" />
 
             <com.google.android.material.button.MaterialButton
@@ -203,12 +203,13 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/direction_control"
                         android:textColor="#88FFFFFF"
-                        android:textSize="10sp" />
+                        android:textSize="11sp" />
                 </LinearLayout>
 
                 <ImageView
                     android:layout_width="32dp"
                     android:layout_height="32dp"
+                    android:contentDescription="@null"
                     android:alpha="0.9"
                     android:src="@drawable/aladin_cctv_logo" />
             </LinearLayout>
@@ -241,6 +242,7 @@
                 <ImageView
                     android:layout_width="58dp"
                     android:layout_height="58dp"
+                    android:contentDescription="@null"
                     android:alpha="0.95"
                     android:background="@drawable/ptz_center_bg"
                     android:padding="9dp"
@@ -288,7 +290,7 @@
                     style="@style/PtzZoomBtn"
                     android:background="@drawable/ptz_btn_bg"
                     android:contentDescription="@string/zoom_label"
-                    android:text="−" />
+                    android:text="@string/zoom_out_symbol" />
 
                 <LinearLayout
                     android:layout_width="0dp"
@@ -303,7 +305,7 @@
                         android:letterSpacing="0.1"
                         android:text="@string/zoom_label"
                         android:textColor="#AAFFFFFF"
-                        android:textSize="10sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
 
                     <TextView
@@ -312,7 +314,7 @@
                         android:layout_marginTop="2dp"
                         android:text="@string/zoom_remote_hint"
                         android:textColor="@color/brand_orange_bright"
-                        android:textSize="10sp"
+                        android:textSize="11sp"
                         android:textStyle="bold" />
                 </LinearLayout>
 
@@ -321,7 +323,7 @@
                     style="@style/PtzZoomBtn"
                     android:background="@drawable/ptz_btn_bg"
                     android:contentDescription="@string/zoom_label"
-                    android:text="+" />
+                    android:text="@string/zoom_in_symbol" />
             </LinearLayout>
         </LinearLayout>
     </com.google.android.material.card.MaterialCardView>

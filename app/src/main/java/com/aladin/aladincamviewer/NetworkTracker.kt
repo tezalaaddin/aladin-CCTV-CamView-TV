@@ -1,6 +1,7 @@
 package com.aladin.aladincamviewer
 
 import android.content.Context
+import android.annotation.SuppressLint
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
@@ -39,6 +40,7 @@ class NetworkTracker private constructor(
         private const val TAG = "ALADIN_NETWORK_TRACKER"
         private const val SCAN_INTERVAL_MINUTES = 15L
 
+        @SuppressLint("StaticFieldLeak")
         @Volatile private var instance: NetworkTracker? = null
 
         fun getInstance(context: Context, repository: CameraRepository): NetworkTracker =
@@ -59,11 +61,11 @@ class NetworkTracker private constructor(
 
     fun startTracking() {
         if (trackingJob?.isActive == true) return
-        Log.i(TAG, "Network tracking started intervalMinutes=$SCAN_INTERVAL_MINUTES")
+        AppLog.i(TAG, "Network tracking started intervalMinutes=$SCAN_INTERVAL_MINUTES")
         trackingJob = scope.launch {
             while (isActive) {
                 runCatching { performIpRecoveryScan() }
-                    .onFailure { Log.e(TAG, "IP recovery scan failed", it) }
+                    .onFailure { AppLog.e(TAG, "IP recovery scan failed", it) }
                 delay(TimeUnit.MINUTES.toMillis(SCAN_INTERVAL_MINUTES))
             }
         }
@@ -72,7 +74,7 @@ class NetworkTracker private constructor(
     fun triggerImmediateScan() {
         scope.launch {
             mainHandler.post {
-                Toast.makeText(context, "Kamera IP adresleri kontrol ediliyor…", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Kamera IP adresleri kontrol ediliyorâ€¦", Toast.LENGTH_SHORT).show()
             }
             performIpRecoveryScan()
         }
@@ -84,7 +86,7 @@ class NetworkTracker private constructor(
             try {
                 val camera = repository.getCameraById(proposal.cameraId) ?: return@launch
                 if (repository.isIpAlreadyUsed(proposal.newIp, camera.id)) {
-                    Log.w(TAG, "Recovery confirmation rejected: IP already used newIp=${proposal.newIp}")
+                    AppLog.w(TAG, "Recovery confirmation rejected: IP already used newIp=${proposal.newIp}")
                     return@launch
                 }
                 val probeUrl = rewriteHost(
@@ -93,7 +95,7 @@ class NetworkTracker private constructor(
                     proposal.newIp
                 )
                 if (!streamVerifier.canPlay(probeUrl)) {
-                    Log.w(TAG, "Recovery confirmation failed revalidation camera=${camera.name} newIp=${proposal.newIp}")
+                    AppLog.w(TAG, "Recovery confirmation failed revalidation camera=${camera.name} newIp=${proposal.newIp}")
                     return@launch
                 }
                 updateCameraAddress(
@@ -115,14 +117,14 @@ class NetworkTracker private constructor(
     fun rejectRecovery(proposal: RecoveryProposal) {
         scope.launch {
             pendingProposalKeys.remove(proposalKey(proposal.cameraId, proposal.newIp))
-            Log.i(TAG, "Recovery proposal rejected camera=${proposal.cameraName} newIp=${proposal.newIp}")
+            AppLog.i(TAG, "Recovery proposal rejected camera=${proposal.cameraName} newIp=${proposal.newIp}")
         }
     }
 
     private suspend fun performIpRecoveryScan() = scanMutex.withLock {
-        Log.i(TAG, "IP recovery scan started")
+        AppLog.i(TAG, "IP recovery scan started")
         val discovered = hybridScanner.startFullScan { partial ->
-            Log.d(TAG, "Discovery progress devices=${partial.size}")
+            AppLog.d(TAG, "Discovery progress devices=${partial.size}")
         }
         logDiscoveredDevices(discovered)
         processDiscoveredDevices(discovered)
@@ -131,7 +133,7 @@ class NetworkTracker private constructor(
     private suspend fun processDiscoveredDevices(discovered: List<DiscoveryDevice>) {
         val savedCameras = repository.allCameras.first().sortedBy { it.displayOrder }
         if (savedCameras.isEmpty()) {
-            Log.d(TAG, "IP recovery skipped: no saved cameras")
+            AppLog.d(TAG, "IP recovery skipped: no saved cameras")
             return
         }
 
@@ -153,7 +155,7 @@ class NetworkTracker private constructor(
             if (enriched != camera) {
                 repository.update(enriched)
                 identityEnrichments++
-                Log.i(TAG, "Camera identity learned name=${camera.name} ip=${sameIp.ip} uuid=${sameIp.uuid != null} mac=${sameIp.mac != null}")
+                AppLog.i(TAG, "Camera identity learned name=${camera.name} ip=${sameIp.ip} uuid=${sameIp.uuid != null} mac=${sameIp.mac != null}")
             }
         }
 
@@ -175,7 +177,7 @@ class NetworkTracker private constructor(
                     ("RTSP" in device.protocols || "ONVIF" in device.protocols) &&
                     CameraIdentityMatcher.isBrandCompatible(camera.brand, device.brand)
             }
-            Log.i(TAG, "Legacy recovery candidates camera=${camera.name} oldIp=${camera.ipAddress} candidates=${candidates.joinToString { "${it.ip}/${it.brand}" }}")
+            AppLog.i(TAG, "Legacy recovery candidates camera=${camera.name} oldIp=${camera.ipAddress} candidates=${candidates.joinToString { "${it.ip}/${it.brand}" }}")
 
             val verified = mutableListOf<DiscoveryDevice>()
             for (candidate in candidates) {
@@ -206,15 +208,15 @@ class NetworkTracker private constructor(
                     val key = proposalKey(proposal.cameraId, proposal.newIp)
                     if (pendingProposalKeys.add(key)) {
                         proposalChannel.trySend(proposal)
-                        Log.w(TAG, "Legacy recovery requires confirmation camera=${camera.name} oldIp=${proposal.oldIp} candidateIp=${proposal.newIp}")
+                        AppLog.w(TAG, "Legacy recovery requires confirmation camera=${camera.name} oldIp=${proposal.oldIp} candidateIp=${proposal.newIp}")
                     }
                 }
-                0 -> Log.w(TAG, "Legacy recovery found no playable candidate camera=${camera.name}")
-                else -> Log.w(TAG, "Legacy recovery ambiguous camera=${camera.name} playableCandidates=${verified.joinToString { it.ip }}")
+                0 -> AppLog.w(TAG, "Legacy recovery found no playable candidate camera=${camera.name}")
+                else -> AppLog.w(TAG, "Legacy recovery ambiguous camera=${camera.name} playableCandidates=${verified.joinToString { it.ip }}")
             }
         }
 
-        Log.i(TAG, "IP recovery completed saved=${savedCameras.size} discovered=${discovered.size} identityEnrichments=$identityEnrichments ipUpdates=$ipUpdates")
+        AppLog.i(TAG, "IP recovery completed saved=${savedCameras.size} discovered=${discovered.size} identityEnrichments=$identityEnrichments ipUpdates=$ipUpdates")
     }
 
     private suspend fun updateCameraAddress(camera: CameraEntity, device: DiscoveryDevice, reason: String) {
@@ -225,9 +227,9 @@ class NetworkTracker private constructor(
             subStreamUrl = rewriteHost(camera.subStreamUrl, oldHost, device.ip)
         )
         repository.update(updated)
-        Log.w(TAG, "Camera IP updated name=${camera.name} oldIp=$oldHost newIp=${device.ip} reason=$reason")
+        AppLog.w(TAG, "Camera IP updated name=${camera.name} oldIp=$oldHost newIp=${device.ip} reason=$reason")
         mainHandler.post {
-            Toast.makeText(context, "${camera.name}: $oldHost → ${device.ip}", Toast.LENGTH_LONG).show()
+            Toast.makeText(context, "${camera.name}: $oldHost â†’ ${device.ip}", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -244,7 +246,7 @@ class NetworkTracker private constructor(
 
     private fun logDiscoveredDevices(devices: List<DiscoveryDevice>) {
         devices.forEach { device ->
-            Log.d(
+            AppLog.d(
                 TAG,
                 "Discovered ip=${device.ip} brand=${device.brand} model=${device.model} uuid=${device.uuid} mac=${device.mac} protocols=${device.protocols.sorted().joinToString()}"
             )
@@ -253,6 +255,6 @@ class NetworkTracker private constructor(
 
     fun stopTracking() {
         trackingJob?.cancel()
-        Log.i(TAG, "Network tracking stopped")
+        AppLog.i(TAG, "Network tracking stopped")
     }
 }

@@ -41,3 +41,14 @@ Aladin CCTV v1.3 improves long-running RTSP playback, camera discovery and setup
 ## Distribution note
 
 Release artifacts must be signed with the project's private release key before installation or store upload. Private keys and credentials must never be committed to the repository.
+
+## Store-readiness hardening
+
+- Camera credentials and credential-bearing RTSP addresses are encrypted at rest with Android Keystore.
+- The application PIN is stored as a salted one-way hash; the fixed administrator override was removed.
+- Cloud/device-transfer backup is disabled for application data.
+- Configuration exports omit camera credentials and the app PIN; validated imports replace cameras atomically.
+- Boot start, automatic DHCP recovery, daily maintenance and production diagnostic logging are user-controlled.
+- WebView navigation is restricted to the selected private camera host and file/content access is disabled.
+- Android TV Ethernet discovery, 320×180 banner, adaptive launcher icon, AAB language delivery and accessibility issues were corrected.
+- Release signing, privacy policy, third-party notices and Play Store checklist were added.

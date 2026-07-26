@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
 import java.io.InputStream
 import java.io.OutputStream
+import java.net.URI
 
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
     private val repository: CameraRepository
@@ -16,16 +17,16 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     init {
         val cameraDao = AppDatabase.getDatabase(application).cameraDao()
-        repository = CameraRepository(cameraDao)
+        repository = CameraRepository(application, cameraDao)
         prefHelper = PreferenceHelper(application)
         allCameras = repository.allCameras
     }
 
     fun updatePin(pin: String) {
-        prefHelper.appPin = pin
+        prefHelper.setPin(pin)
     }
 
-    fun getPin() = prefHelper.appPin
+    fun hasPin() = prefHelper.hasPin
 
     fun updateOfflineAlarm(enabled: Boolean) {
         prefHelper.isOfflineAlarmEnabled = enabled
@@ -39,30 +40,43 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         }
     }
 
-    fun exportConfig(outputStream: OutputStream, cameras: List<CameraEntity>) {
+    fun exportConfig(outputStream: OutputStream, cameras: List<CameraEntity>, onComplete: (Result<Unit>) -> Unit) {
         viewModelScope.launch {
-            val config = ConfigModel(cameras, prefHelper.appPin, prefHelper.isOfflineAlarmEnabled)
-            val jsonString = Json { prettyPrint = true }.encodeToString(ConfigModel.serializer(), config)
-            outputStream.use { it.write(jsonString.toByteArray()) }
-        }
-    }
-
-    fun importConfig(inputStream: InputStream, onComplete: () -> Unit) {
-        viewModelScope.launch {
-            try {
-                val jsonString = inputStream.bufferedReader().use { it.readText() }
-                val config = Json.decodeFromString<ConfigModel>(jsonString)
-                val uniqueCameras = config.cameras.distinctBy { it.ipAddress.trim() }
-
-                repository.deleteAll()
-                repository.insertAll(uniqueCameras)
-                prefHelper.appPin = config.appPin
-                prefHelper.isOfflineAlarmEnabled = config.offlineAlarm
-                
-                onComplete()
-            } catch (e: Exception) {
-                e.printStackTrace()
+            val result = runCatching {
+                val sanitized = cameras.map { camera -> camera.copy(
+                    username = "", password = "", onvifUsername = "", onvifPassword = "",
+                    mainStreamUrl = stripUserInfo(camera.mainStreamUrl),
+                    subStreamUrl = stripUserInfo(camera.subStreamUrl)
+                ) }
+                val config = ConfigModel(sanitized, offlineAlarm = prefHelper.isOfflineAlarmEnabled)
+                val jsonString = Json { prettyPrint = true }.encodeToString(ConfigModel.serializer(), config)
+                outputStream.use { it.write(jsonString.toByteArray()) }
             }
+            result.exceptionOrNull()?.let { AppLog.e("ALADIN_CONFIG", "Configuration export failed", it) }
+            onComplete(result)
         }
     }
+
+    fun importConfig(inputStream: InputStream, onComplete: (Result<Int>) -> Unit) {
+        viewModelScope.launch {
+            val result = runCatching {
+                val jsonString = inputStream.bufferedReader().use { it.readText() }
+                require(jsonString.length <= 2_000_000) { "Configuration file is too large" }
+                val config = Json { ignoreUnknownKeys = true }.decodeFromString<ConfigModel>(jsonString)
+                val errors = ConfigValidator.validate(config)
+                require(errors.isEmpty()) { errors.joinToString("; ") }
+                val normalized = config.cameras.map { it.copy(ipAddress = it.ipAddress.trim()) }
+                repository.replaceAll(normalized)
+                prefHelper.isOfflineAlarmEnabled = config.offlineAlarm
+                normalized.size
+            }
+            result.exceptionOrNull()?.let { AppLog.e("ALADIN_CONFIG", "Configuration import failed", it) }
+            onComplete(result)
+        }
+    }
+
+    private fun stripUserInfo(value: String): String = if (value.isBlank()) value else runCatching {
+        val uri = URI(value)
+        URI(uri.scheme, null, uri.host, uri.port, uri.path, uri.query, uri.fragment).toASCIIString()
+    }.getOrDefault("")
 }

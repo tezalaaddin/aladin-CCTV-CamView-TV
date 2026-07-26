@@ -76,7 +76,7 @@ class OnvifScanner(private val context: Context) {
                 } catch (e: Exception) {}
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("ALADIN_DISCOVERY", "ONVIF scan failed", e)
         } finally {
             socket?.close()
             if (lock.isHeld) lock.release()

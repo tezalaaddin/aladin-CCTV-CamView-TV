@@ -46,7 +46,7 @@ object RtspEndpointVerifier {
                 if (authenticated.code == 200) "Authenticated RTSP DESCRIBE accepted" else "Authentication or stream path rejected"
             )
         }.getOrElse {
-            Log.d(TAG, "RTSP verification failed endpoint=${safeEndpoint(url)} reason=${it.javaClass.simpleName}")
+            AppLog.d(TAG, "RTSP verification failed endpoint=${safeEndpoint(url)} reason=${it.javaClass.simpleName}")
             Result(false, null, it.javaClass.simpleName)
         }
     }
@@ -86,7 +86,7 @@ object RtspEndpointVerifier {
         val realm = values["realm"] ?: return null
         val nonce = values["nonce"] ?: return null
         val qop = values["qop"]?.split(',')?.map { it.trim() }?.firstOrNull { it == "auth" }
-        Log.d(TAG, "RTSP Digest challenge endpoint=${safeEndpoint(uri.toString())} realm=$realm qop=${values["qop"] ?: "none"} algorithm=${values["algorithm"] ?: "MD5"}")
+        AppLog.d(TAG, "RTSP Digest challenge endpoint=${safeEndpoint(uri.toString())} realm=$realm qop=${values["qop"] ?: "none"} algorithm=${values["algorithm"] ?: "MD5"}")
         // RTSP Digest uses the exact Request-URI from the DESCRIBE request (absolute URI),
         // unlike the origin-form path commonly used by HTTP servers.
         val requestUri = uri.toASCIIString()

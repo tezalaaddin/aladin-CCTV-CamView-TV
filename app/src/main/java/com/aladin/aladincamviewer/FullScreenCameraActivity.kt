@@ -13,6 +13,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Job
@@ -58,6 +59,11 @@ class FullScreenCameraActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
         setContentView(R.layout.activity_full_screen)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (isPtzMode) togglePtzMode(false) else finish()
+            }
+        })
         TvFocusManager.install(this)
 
         videoLayout = findViewById(R.id.full_player_view)
@@ -127,20 +133,14 @@ class FullScreenCameraActivity : AppCompatActivity() {
                     return true
                 }
                 KeyEvent.KEYCODE_CHANNEL_UP, KeyEvent.KEYCODE_PAGE_UP -> {
-                    Log.d("ALADIN_PTZ", "Remote zoom key action=${if (action == KeyEvent.ACTION_DOWN) "in" else "stop"} keyCode=$keyCode")
+                    AppLog.d("ALADIN_PTZ", "Remote zoom key action=${if (action == KeyEvent.ACTION_DOWN) "in" else "stop"} keyCode=$keyCode")
                     if (action == KeyEvent.ACTION_DOWN) ptzManager?.zoomIn() else ptzManager?.stop()
                     return true
                 }
                 KeyEvent.KEYCODE_CHANNEL_DOWN, KeyEvent.KEYCODE_PAGE_DOWN -> {
-                    Log.d("ALADIN_PTZ", "Remote zoom key action=${if (action == KeyEvent.ACTION_DOWN) "out" else "stop"} keyCode=$keyCode")
+                    AppLog.d("ALADIN_PTZ", "Remote zoom key action=${if (action == KeyEvent.ACTION_DOWN) "out" else "stop"} keyCode=$keyCode")
                     if (action == KeyEvent.ACTION_DOWN) ptzManager?.zoomOut() else ptzManager?.stop()
                     return true
-                }
-                KeyEvent.KEYCODE_BACK -> {
-                    if (action == KeyEvent.ACTION_UP) {
-                        togglePtzMode(false)
-                        return true
-                    }
                 }
             }
         }
@@ -171,10 +171,11 @@ class FullScreenCameraActivity : AppCompatActivity() {
     }
 
     private fun mapPtz(id: Int, action: () -> Unit) {
-        findViewById<View>(id)?.setOnTouchListener { _, event ->
+        findViewById<View>(id)?.setOnTouchListener { view, event ->
             when (event.action) {
                 android.view.MotionEvent.ACTION_DOWN -> { action(); true }
-                android.view.MotionEvent.ACTION_UP, android.view.MotionEvent.ACTION_CANCEL -> { ptzManager?.stop(); true }
+                android.view.MotionEvent.ACTION_UP -> { ptzManager?.stop(); view.performClick(); true }
+                android.view.MotionEvent.ACTION_CANCEL -> { ptzManager?.stop(); true }
                 else -> false
             }
         }

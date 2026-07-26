@@ -40,7 +40,7 @@ class CctvPlayerManager(
             val progress = displayedFrames ?: player.time
             watchdogTicks++
             if (watchdogTicks % 6 == 0) {
-                Log.d(
+                AppLog.d(
                     tag,
                     "RTSP health endpoint=${currentUrl?.let(::describeEndpoint)} " +
                         "displayed=${stats?.displayedPictures} decoded=${stats?.decodedVideo} " +
@@ -50,7 +50,7 @@ class CctvPlayerManager(
             if (player.isPlaying && stallDetector.isStalled(SystemClock.elapsedRealtime(), progress)) {
                 val url = currentUrl ?: return
                 val endpoint = describeEndpoint(url)
-                Log.w(
+                AppLog.w(
                     tag,
                     "RTSP video frames stalled endpoint=$endpoint displayed=${stats?.displayedPictures} " +
                         "decoded=${stats?.decodedVideo} demuxBytes=${stats?.demuxReadBytes} " +
@@ -86,8 +86,8 @@ class CctvPlayerManager(
 
     fun playStream(url: String) {
         if (url.isBlank()) {
-            Log.w(tag, "RTSP start ignored: empty URL")
-            notifyState(false, "Yayın adresi boş")
+            AppLog.w(tag, "RTSP start ignored: empty URL")
+            notifyState(false, "YayÄ±n adresi boÅŸ")
             return
         }
         if (url == currentUrl && mediaPlayer?.isPlaying == true) return
@@ -108,13 +108,13 @@ class CctvPlayerManager(
         val endpoint = describeEndpoint(url)
         val cacheMs = if (isSubStream) 800 else 1500
         val decoder = if (hardwareDecoderEnabled) "hardware" else "software"
-        Log.i(tag, "RTSP start endpoint=$endpoint transport=tcp profile=${if (isSubStream) "grid" else "fullscreen"} decoder=$decoder cacheMs=$cacheMs attempt=${retryAttempt + 1}")
+        AppLog.i(tag, "RTSP start endpoint=$endpoint transport=tcp profile=${if (isSubStream) "grid" else "fullscreen"} decoder=$decoder cacheMs=$cacheMs attempt=${retryAttempt + 1}")
         notifyState(true, null)
 
         mediaPlayer?.setEventListener { event ->
             when (event.type) {
                 MediaPlayer.Event.Playing -> {
-                    Log.i(tag, "RTSP playing endpoint=$endpoint retries=$retryAttempt")
+                    AppLog.i(tag, "RTSP playing endpoint=$endpoint retries=$retryAttempt")
                     retryAttempt = 0
                     retryScheduled = false
                     notifyState(false, null)
@@ -125,7 +125,7 @@ class CctvPlayerManager(
                     val bucket = (event.buffering.toInt().coerceIn(0, 100) / 25) * 25
                     if (bucket != lastBufferBucket) {
                         lastBufferBucket = bucket
-                        Log.d(tag, "RTSP buffering endpoint=$endpoint percent=$bucket")
+                        AppLog.d(tag, "RTSP buffering endpoint=$endpoint percent=$bucket")
                     }
                 }
                 MediaPlayer.Event.EncounteredError ->
@@ -149,7 +149,7 @@ class CctvPlayerManager(
             media.release()
             mediaPlayer?.play()
         } catch (error: Exception) {
-            Log.e(tag, "RTSP start failure endpoint=$endpoint type=${error.javaClass.simpleName}", error)
+            AppLog.e(tag, "RTSP start failure endpoint=$endpoint type=${error.javaClass.simpleName}", error)
             scheduleRetry(url, generation, endpoint, "start_failure")
         }
     }
@@ -159,18 +159,18 @@ class CctvPlayerManager(
         stopPlaybackWatchdog()
         if (hardwareDecoderEnabled && (reason == "decoder_or_network_error" || reason == "video_frames_stalled")) {
             hardwareDecoderEnabled = false
-            Log.w(tag, "RTSP decoder fallback endpoint=$endpoint hardware=failed next=software reason=$reason")
+            AppLog.w(tag, "RTSP decoder fallback endpoint=$endpoint hardware=failed next=software reason=$reason")
         }
         val delayMs = retryPolicy.delayForAttempt(retryAttempt)
         if (delayMs == null) {
-            Log.e(tag, "RTSP retry exhausted endpoint=$endpoint reason=$reason attempts=$retryAttempt")
-            notifyState(false, "Bağlantı kurulamadı")
+            AppLog.e(tag, "RTSP retry exhausted endpoint=$endpoint reason=$reason attempts=$retryAttempt")
+            notifyState(false, "BaÄŸlantÄ± kurulamadÄ±")
             return
         }
         retryScheduled = true
         retryAttempt++
-        Log.w(tag, "RTSP retry scheduled endpoint=$endpoint reason=$reason attempt=$retryAttempt delayMs=$delayMs")
-        notifyState(false, "Yeniden bağlanılıyor ($retryAttempt/5)")
+        AppLog.w(tag, "RTSP retry scheduled endpoint=$endpoint reason=$reason attempt=$retryAttempt delayMs=$delayMs")
+        notifyState(false, "Yeniden baÄŸlanÄ±lÄ±yor ($retryAttempt/5)")
         mainHandler.postDelayed({
             if (!released && generation == playGeneration) {
                 retryScheduled = false
@@ -187,7 +187,7 @@ class CctvPlayerManager(
         val initialProgress = runCatching { mediaPlayer?.media?.stats?.displayedPictures?.toLong() }
             .getOrNull() ?: mediaPlayer?.time ?: -1L
         stallDetector.reset(SystemClock.elapsedRealtime(), initialProgress)
-        Log.d(tag, "RTSP stall watchdog started endpoint=${currentUrl?.let(::describeEndpoint)} thresholdMs=25000")
+        AppLog.d(tag, "RTSP stall watchdog started endpoint=${currentUrl?.let(::describeEndpoint)} thresholdMs=25000")
         mainHandler.postDelayed(playbackWatchdog, WATCHDOG_INTERVAL_MS)
     }
 
@@ -225,7 +225,7 @@ class CctvPlayerManager(
             it.release()
         }
         mediaPlayer = null
-        Log.d(tag, "RTSP player released endpoint=${currentUrl?.let(::describeEndpoint)}")
+        AppLog.d(tag, "RTSP player released endpoint=${currentUrl?.let(::describeEndpoint)}")
     }
 
     val player: Any? get() = null

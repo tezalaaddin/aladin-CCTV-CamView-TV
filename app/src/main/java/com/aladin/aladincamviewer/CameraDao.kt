@@ -8,6 +8,9 @@ interface CameraDao {
     @Query("SELECT * FROM cameras ORDER BY displayOrder ASC")
     fun getAllCameras(): Flow<List<CameraEntity>>
 
+    @Query("SELECT * FROM cameras ORDER BY displayOrder ASC")
+    suspend fun getAllCamerasOnce(): List<CameraEntity>
+
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertCamera(camera: CameraEntity)
 
@@ -22,6 +25,12 @@ interface CameraDao {
 
     @Query("DELETE FROM cameras")
     suspend fun deleteAll()
+
+    @Transaction
+    suspend fun replaceAll(cameras: List<CameraEntity>) {
+        deleteAll()
+        insertCameras(cameras)
+    }
 
     @Query("SELECT * FROM cameras WHERE id = :id")
     suspend fun getCameraById(id: Int): CameraEntity?

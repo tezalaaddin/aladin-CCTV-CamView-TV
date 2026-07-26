@@ -30,13 +30,13 @@ class RtspStreamVerifier {
             }
             player.media = media
             media.release()
-            Log.d(TAG, "Legacy RTSP identity probe start endpoint=$endpoint timeoutMs=$timeoutMs")
+            AppLog.d(TAG, "Legacy RTSP identity probe start endpoint=$endpoint timeoutMs=$timeoutMs")
             player.play()
             val playable = withTimeoutOrNull(timeoutMs) { result.await() } ?: false
-            Log.i(TAG, "Legacy RTSP identity probe result endpoint=$endpoint playable=$playable")
+            AppLog.i(TAG, "Legacy RTSP identity probe result endpoint=$endpoint playable=$playable")
             playable
         } catch (error: Exception) {
-            Log.w(TAG, "Legacy RTSP identity probe failed endpoint=$endpoint", error)
+            AppLog.w(TAG, "Legacy RTSP identity probe failed endpoint=$endpoint", error)
             false
         } finally {
             player.setEventListener(null)

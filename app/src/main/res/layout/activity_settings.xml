@@ -118,12 +118,53 @@
                         app:layout_constraintTop_toTopOf="@id/pin_layout" />
 
                     <LinearLayout
+                        android:id="@+id/automation_options"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:orientation="horizontal"
+                        app:layout_constraintTop_toBottomOf="@id/pin_layout">
+
+                        <CheckBox
+                            android:id="@+id/check_start_on_boot"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/start_on_boot"
+                            android:textColor="@color/white" />
+
+                        <CheckBox
+                            android:id="@+id/check_network_recovery"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/automatic_network_recovery"
+                            android:textColor="@color/white" />
+
+                        <CheckBox
+                            android:id="@+id/check_daily_maintenance"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/daily_maintenance"
+                            android:textColor="@color/white" />
+
+                        <CheckBox
+                            android:id="@+id/check_diagnostic_logging"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/diagnostic_logging"
+                            android:textColor="@color/white" />
+                    </LinearLayout>
+
+                    <LinearLayout
                         android:id="@+id/button_layout"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="20dp"
                         android:orientation="horizontal"
-                        app:layout_constraintTop_toBottomOf="@id/pin_layout">
+                        app:layout_constraintTop_toBottomOf="@id/automation_options">
 
                         <com.google.android.material.button.MaterialButton
                             android:id="@+id/btn_export"
@@ -172,7 +213,7 @@
                 android:layout_gravity="center"
                 android:text="@string/diagnostic_btn"
                 android:textColor="#44FFFFFF"
-                android:textSize="10sp" />
+                android:textSize="11sp" />
 
         </LinearLayout>
     </androidx.core.widget.NestedScrollView>

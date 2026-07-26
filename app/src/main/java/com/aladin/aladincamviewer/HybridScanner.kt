@@ -69,9 +69,9 @@ class HybridScanner(private val context: Context) {
             activeScanScope = null
         }
         val result = getSortedDevices()
-        Log.i("ALADIN_DISCOVERY", "Scan completed devices=${result.size} durationMs=${System.currentTimeMillis() - startedAt}")
+        AppLog.i("ALADIN_DISCOVERY", "Scan completed devices=${result.size} durationMs=${System.currentTimeMillis() - startedAt}")
         result.forEach { device ->
-            Log.d(
+            AppLog.d(
                 "ALADIN_DISCOVERY",
                 "Result ip=${device.ip} brand=${device.brand} model=${device.model ?: "unknown"} " +
                     "mac=${device.mac ?: "unknown"} protocols=${device.protocols.sorted().joinToString()}"
@@ -174,7 +174,7 @@ class HybridScanner(private val context: Context) {
         val listeners = synchronized(mdnsListeners) { mdnsListeners.toList().also { mdnsListeners.clear() } }
         listeners.forEach { listener ->
             runCatching { nsdManager.stopServiceDiscovery(listener) }
-                .onFailure { Log.w("ALADIN_DISCOVERY", "mDNS stop failed", it) }
+                .onFailure { AppLog.w("ALADIN_DISCOVERY", "mDNS stop failed", it) }
         }
     }
 

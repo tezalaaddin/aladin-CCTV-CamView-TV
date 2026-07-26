@@ -38,7 +38,7 @@ object CctvWatchdog {
             }
         }
 
-        Log.i(TAG, "⏰ Daily Maintenance Scheduled: ${calendar.time}")
+        AppLog.i(TAG, "â° Daily Maintenance Scheduled: ${calendar.time}")
 
         // Daily restart at 04:00 AM doesn't need to be exact. 
         // Using setAndAllowWhileIdle to ensure it fires even in Doze mode on TVs
@@ -49,4 +49,16 @@ object CctvWatchdog {
             pendingIntent
         )
     }
+
+    fun cancelDailyRestart(context: Context) {
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        alarmManager.cancel(restartPendingIntent(context))
+    }
+
+    private fun restartPendingIntent(context: Context): PendingIntent = PendingIntent.getBroadcast(
+        context,
+        1001,
+        Intent(context, BootReceiver::class.java).apply { action = "ACTION_DAILY_RESTART" },
+        PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+    )
 }

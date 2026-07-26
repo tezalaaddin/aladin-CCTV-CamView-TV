@@ -11,7 +11,7 @@ class EditCameraViewModel(application: Application) : AndroidViewModel(applicati
 
     init {
         val cameraDao = AppDatabase.getDatabase(application).cameraDao()
-        repository = CameraRepository(cameraDao)
+        repository = CameraRepository(application, cameraDao)
     }
 
     suspend fun getCameraById(id: Int) = repository.getCameraById(id)

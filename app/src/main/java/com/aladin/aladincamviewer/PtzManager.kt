@@ -59,7 +59,7 @@ class PtzManager(private val camera: CameraModel) {
 
     /** Cancels discovery and movement requests owned by this screen. */
     fun close() {
-        Log.d(TAG, "PTZ manager closed camera=${camera.name}")
+        AppLog.d(TAG, "PTZ manager closed camera=${camera.name}")
         scope.cancel()
     }
 
@@ -71,7 +71,7 @@ class PtzManager(private val camera: CameraModel) {
                 val ptzUri = cachedPtzUri ?: "/onvif/ptz_service"
                 executeSoapRequest(createSoapEnvelope(envelopeProvider(token)), ptzUri)
             } catch (e: Exception) {
-                Log.e(TAG, "PTZ Error", e)
+                AppLog.e(TAG, "PTZ Error", e)
             }
         }
     }

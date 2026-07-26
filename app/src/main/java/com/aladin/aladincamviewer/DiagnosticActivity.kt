@@ -65,7 +65,7 @@ class DiagnosticActivity : AppCompatActivity() {
     private fun appendLog(message: String) {
         runOnUiThread {
             logView.append("\n$message")
-            Log.d(tag, message)
+            AppLog.d(tag, message)
         }
     }
 

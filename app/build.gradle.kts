@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
@@ -8,21 +10,40 @@ plugins {
 val isBundleBuild = gradle.startParameter.taskNames.any { taskName ->
     taskName.contains("bundle", ignoreCase = true)
 }
+val releaseKeystoreProperties = Properties()
+val releaseKeystoreFile = rootProject.file("keystore.properties")
+if (releaseKeystoreFile.isFile) {
+    releaseKeystoreFile.inputStream().use(releaseKeystoreProperties::load)
+}
 
 android {
     namespace = "com.aladin.aladincamviewer"
-    compileSdk = 35
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.aladin.aladincamviewer"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 4
         versionName = "1.3"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         // 🚀 OPTIMIZATION: Most TVs use ARM. Removing x86/x86_64 saves ~100MB
+    }
+    buildFeatures {
+        buildConfig = true
+    }
+
+    signingConfigs {
+        if (releaseKeystoreFile.isFile) {
+            create("release") {
+                storeFile = rootProject.file(releaseKeystoreProperties.getProperty("storeFile"))
+                storePassword = releaseKeystoreProperties.getProperty("storePassword")
+                keyAlias = releaseKeystoreProperties.getProperty("keyAlias")
+                keyPassword = releaseKeystoreProperties.getProperty("keyPassword")
+            }
+        }
     }
 
     // LibVLC native binaries dominate APK size. Produce one APK per TV ABI
@@ -39,6 +60,10 @@ android {
     }
 
     buildTypes {
+        debug {
+            applicationIdSuffix = ".debug"
+            versionNameSuffix = "-debug"
+        }
         release {
             // 🚀 OPTIMIZATION: Enable shrinking and obfuscation
             isMinifyEnabled = true
@@ -47,6 +72,12 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            if (releaseKeystoreFile.isFile) signingConfig = signingConfigs.getByName("release")
+        }
+    }
+    bundle {
+        language {
+            enableSplit = false
         }
     }
     compileOptions {
@@ -58,9 +89,13 @@ android {
     }
 }
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
+}
+
 dependencies {
     implementation(libs.androidx.appcompat)
-    implementation("androidx.core:core-ktx:1.13.1")
+    implementation(libs.androidx.core.ktx)
     implementation(libs.material)
 
     // Room
@@ -76,9 +111,6 @@ dependencies {
     // Serialization
     implementation(libs.kotlinx.serialization.json)
 
-    // Security
-    implementation(libs.androidx.security.crypto)
-
     // LibVLC for robust RTSP (Main Engine)
     implementation("org.videolan.android:libvlc-all:3.6.5")
 
@@ -88,4 +120,5 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    androidTestImplementation("androidx.room:room-testing:2.8.4")
 }

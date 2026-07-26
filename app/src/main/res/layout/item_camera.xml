@@ -33,6 +33,7 @@
         <ImageView
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:contentDescription="@null"
             android:src="@android:drawable/ic_menu_add"
             android:alpha="0.5"
             app:tint="@color/white" />
@@ -40,7 +41,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Kamera Eklemek İçin Tıklayın"
+            android:text="@string/click_to_add_camera"
             android:textColor="@color/white"
             android:alpha="0.5"
             android:textSize="12sp"
@@ -80,7 +81,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="#FF9800"
-            android:textSize="10sp"
+            android:textSize="11sp"
             android:textStyle="bold" />
 
             <TextView
@@ -88,7 +89,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:textColor="@color/white"
-            android:textSize="9sp" />
+            android:textSize="11sp" />
     </LinearLayout>
 
     <View

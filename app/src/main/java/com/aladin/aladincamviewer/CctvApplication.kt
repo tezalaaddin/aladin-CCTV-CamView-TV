@@ -4,6 +4,10 @@ import android.app.Application
 import android.content.Context
 import android.util.Log
 import org.videolan.libvlc.LibVLC
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 /**
  * Custom Application class for 24/7 CCTV monitoring stability.
@@ -17,7 +21,7 @@ class CctvApplication : Application() {
             get() {
                 if (_sharedLibVLC == null) {
                     // Fallback for unexpected lifecycle issues
-                    Log.e("CctvApp", "LibVLC accessed before initialization!")
+                    AppLog.e("CctvApp", "LibVLC accessed before initialization!")
                 }
                 return _sharedLibVLC!!
             }
@@ -32,6 +36,7 @@ class CctvApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        AppLog.initialize(this)
         
         try {
             // Global VLC Engine initialization with hardware acceleration
@@ -45,17 +50,26 @@ class CctvApplication : Application() {
             )
             _sharedLibVLC = LibVLC(this, options)
         } catch (e: Exception) {
-            Log.e("CctvApp", "Failed to init LibVLC", e)
+            AppLog.e("CctvApp", "Failed to init LibVLC", e)
         }
 
         // Periodic maintenance and DHCP recovery
         try {
-            CctvWatchdog.scheduleDailyRestart(this)
+            if (PreferenceHelper(this).dailyMaintenance) CctvWatchdog.scheduleDailyRestart(this)
             val database = AppDatabase.getDatabase(this)
-            val repository = CameraRepository(database.cameraDao())
-            NetworkTracker.getInstance(this, repository).startTracking()
+            val repository = CameraRepository(this, database.cameraDao())
+            CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
+                repository.migrateLegacySecrets()
+                val preferences = PreferenceHelper(this@CctvApplication)
+                if (!preferences.hasAutomaticNetworkRecoveryChoice && repository.getAllOnce().isNotEmpty()) {
+                    preferences.automaticNetworkRecovery = true
+                }
+                if (preferences.automaticNetworkRecovery) {
+                    NetworkTracker.getInstance(this@CctvApplication, repository).startTracking()
+                }
+            }
         } catch (e: Exception) {
-            Log.e("CctvApp", "Failed to init services", e)
+            AppLog.e("CctvApp", "Failed to init services", e)
         }
     }
 }

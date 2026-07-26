@@ -222,7 +222,7 @@ class EditCameraActivity : AppCompatActivity() {
                 .find(etMain.text.toString())?.groupValues?.get(1).orEmpty().split(':', limit = 2)
             val urlUser = java.net.URLDecoder.decode(userInfo.getOrNull(0).orEmpty(), "UTF-8")
             val urlPass = java.net.URLDecoder.decode(userInfo.getOrNull(1).orEmpty(), "UTF-8")
-            Log.d("ALADIN_CAMERA_SETUP", "Stored fields match stream credentials user=${urlUser == user} password=${urlPass == pass}")
+            AppLog.d("ALADIN_CAMERA_SETUP", "Stored fields match stream credentials user=${urlUser == user} password=${urlPass == pass}")
         }
         val progress = AlertDialog.Builder(this).setMessage(R.string.verifying_camera_configuration).setCancelable(false).show()
         lifecycleScope.launch {

@@ -139,4 +139,30 @@
     <string name="discovery_model_value">MODEL: %1$s</string>
     <string name="add_selected_default">ADD SELECTED</string>
     <string name="duplicate_camera_ip">A camera with this IP address is already registered.</string>
+    <string name="start_on_boot">Start on TV boot</string>
+    <string name="automatic_network_recovery">Automatic IP recovery</string>
+    <string name="daily_maintenance">Daily maintenance</string>
+    <string name="diagnostic_logging">Diagnostic logging</string>
+    <string name="pin_configured_hint">PIN configured — enter a new PIN to change</string>
+    <string name="export_configuration">Export configuration</string>
+    <string name="export_security_notice">For security, exported files do not contain RTSP/ONVIF passwords or the app PIN. Credentials must be entered again after import.</string>
+    <string name="import_success_count">Imported %1$d cameras. Enter camera credentials again.</string>
+    <string name="import_failed_detail">Import failed: %1$s. Existing cameras were not changed.</string>
+    <string name="rtsp_diagnostic_title">RTSP STREAM DIAGNOSTIC</string>
+    <string name="waiting_for_streams">Waiting for streams…</string>
+    <string name="slot_setup_default">SLOT SETUP</string>
+    <string name="default_camera_username" translatable="false">admin</string>
+    <string name="zoom_out_symbol" translatable="false">−</string>
+    <string name="zoom_in_symbol" translatable="false">+</string>
+    <string name="app_logo_description">Aladin CCTV logo</string>
+    <string name="brand_aladin" translatable="false">ALADIN</string>
+    <string name="brand_cctv" translatable="false">CCTV</string>
+    <string name="camera_slot_default">Camera Slot</string>
+    <string name="tap_to_configure">Select to configure</string>
+    <string name="generic_device">Generic Device</string>
+    <string name="ip_address_label">IP Address:</string>
+    <string name="mac_address_label">MAC Addr:</string>
+    <string name="firmware_label">Firmware:</string>
+    <string name="protocols_label">Protocols:</string>
+    <string name="added_label">ADDED</string>
 </resources>

@@ -28,7 +28,7 @@ class CameraConfigManager {
     }
 
     private fun fixUniviewMetadata(ip: String, user: String, pass: String) {
-        Log.d(TAG, "🛠️ Attempting Uniview Fix (U-Code Off) for $ip")
+        AppLog.d(TAG, "ğŸ› ï¸ Attempting Uniview Fix (U-Code Off) for $ip")
         
         // Uniview LAPI usually requires Digest. OkHttp can handle this with a custom interceptor or by trying.
         // We will try to set UCode to Off for the main stream.
@@ -43,12 +43,12 @@ class CameraConfigManager {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "❌ Connection failed to $ip")
+                AppLog.e(TAG, "âŒ Connection failed to $ip")
             }
             override fun onResponse(call: Call, response: Response) {
-                Log.d(TAG, "📡 $ip Response: ${response.code}")
+                AppLog.d(TAG, "ğŸ“¡ $ip Response: ${response.code}")
                 if (response.code == 401) {
-                    Log.w(TAG, "🔒 $ip requires Digest Auth. Manual intervention needed in camera settings.")
+                    AppLog.w(TAG, "ğŸ”’ $ip requires Digest Auth. Manual intervention needed in camera settings.")
                 }
                 response.close()
             }
@@ -56,7 +56,7 @@ class CameraConfigManager {
     }
 
     private fun fixAselsanMetadata(ip: String, user: String, pass: String) {
-        Log.d(TAG, "🛠️ Attempting Aselsan Fix (CBR) for $ip")
+        AppLog.d(TAG, "ğŸ› ï¸ Attempting Aselsan Fix (CBR) for $ip")
         // Aselsan often uses port 8080 or 80.
         val url = "http://$ip/cgi-bin/configManager.cgi?action=setConfig&VideoWidget[0].VideoEncChn[0].MainFormat[0].Video.BitRateControl=CBR"
         
@@ -67,10 +67,10 @@ class CameraConfigManager {
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
-                Log.e(TAG, "❌ Connection failed to Aselsan at $ip")
+                AppLog.e(TAG, "âŒ Connection failed to Aselsan at $ip")
             }
             override fun onResponse(call: Call, response: Response) {
-                Log.d(TAG, "📡 Aselsan Response: ${response.code}")
+                AppLog.d(TAG, "ğŸ“¡ Aselsan Response: ${response.code}")
                 response.close()
             }
         })

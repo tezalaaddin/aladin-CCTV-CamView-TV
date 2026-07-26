@@ -63,7 +63,7 @@ Uygulama bir bulut/NVR sunucusu değildir. Kamera akışlarına cihazdan doğrud
 | Alan | Mevcut seçim |
 |---|---|
 | Dil | Kotlin 2.2.10, Coroutines, Flow |
-| Android | compile/target SDK 35, min SDK 24, Java/JVM 11 |
+| Android | compile SDK 37, target SDK 36, min SDK 24, Java/JVM 11 |
 | Yapı | Tek `app` modülü; Activity + ViewModel + Repository yaklaşımı |
 | Video | LibVLC `3.6.5` (`libvlc-all`) |
 | Veri | Room 2.8.4, şema sürümü 4, KSP2 |
@@ -141,6 +141,10 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 - `app/proguard-rules.pro`: Release küçültme/obfuscation kuralları.
 - `README.md`: Kurulum, derleme, güvenli örnekler ve hızlı Logcat kullanımı.
 - `RELEASE_NOTES_v1.3.md`: v1.3 kullanıcıya dönük değişiklik özeti, uyumluluk, doğrulama ve dağıtım notları.
+- `PRIVACY_POLICY.md`: Play Store için İngilizce/Türkçe gizlilik politikası.
+- `PLAY_STORE_RELEASE_CHECKLIST.md`: İmzalama, mağaza beyanları, Android TV varlıkları ve test kanalı kontrol listesi.
+- `LICENSE`, `THIRD_PARTY_NOTICES.md`: Proje ve üçüncü taraf lisans bildirimleri.
+- `keystore.properties.example`: Git'e eklenmeyen release/upload anahtarı yapılandırmasının güvenli şablonu.
 - `scripts/logcat-aladin.ps1`: Bağlı cihazdan yalnızca proje tanı etiketlerini gösteren PowerShell aracı.
 - `.github/workflows/secret-scan.yml`: GitHub’a gönderilen içerikte kimlik bilgisi benzeri sırları tarayan CI işi.
 - `.githooks/pre-commit`: Commit öncesi yerel gizli bilgi taramasını çalıştırır.
@@ -151,7 +155,9 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 - `CctvWatchdog.kt`: `scheduleDailyRestart` ile gece bakım/yeniden başlatma alarmını planlar. Bu bir çökme yakalayıcı veya kesintisizlik garantisi değildir.
 - `BootReceiver.kt`: `BOOT_COMPLETED` alındığında ana ekranı başlatır.
 - `PreferenceHelper.kt`: Genel ayarlar, PIN ve alarm tercihlerine erişim sağlar.
-- `SecurityUtils.kt`: `checkPin` ile ayarlara erişim öncesi PIN diyaloğu/doğrulaması yapar.
+- `SecurityUtils.kt`: `checkPin` ile ayarlara erişim öncesi salt eklenmiş hash üzerinden PIN doğrulaması yapar; sabit geçiş PIN'i yoktur.
+- `CredentialCrypto.kt`: Android Keystore AES-GCM anahtarıyla kamera kimlik bilgilerini ve credential içeren yayın adreslerini veritabanında şifreler.
+- `AppLog.kt`: Debug derlemelerinde veya kullanıcının açtığı tanılama modunda log üretir; normal release varsayılanında ağ/kamera ayrıntılarını susturur.
 - `LocaleHelper.kt`: `setLocale` ile seçili TR/EN locale bağlamını üretir.
 - `SnapshotUtils.kt`: `takeSnapshot` ile görünümden kare almayı, uygun yüzeyi bulmayı ve resmi saklamayı yönetir.
 - `TvFocusManager.kt`: Tüm Activity’lerde etkileşimli öğeleri D-pad odağına hazırlar; odaklanan kart, buton, form alanı ve kontrol için turuncu çift halo, stroke, yükselme ve kısa ölçek animasyonu uygular. Yeni ekranlar `setContentView` sonrasında `TvFocusManager.install(this)` çağırmalıdır.
@@ -199,6 +205,7 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 - `CameraEntity.kt`: Room’daki `cameras` tablosu; ad, benzersiz IP, kullanıcı/parola, ana/alt RTSP URL, marka, PTZ, sıra, UUID ve MAC alanları.
 - `CameraDao.kt`: Kamera Flow’u, ABORT insert/insertAll, update/delete, ID sorgusu ve `countByIp` işlemleri.
 - `CameraRepository.kt`: DAO’yu UI/ağ katmanlarından ayırır; CRUD ve `isIpAlreadyUsed` sağlar.
+- `ConfigValidator.kt`: JSON içe aktarma öncesi boyut, IP, RTSP URL ve ekran sırası kurallarını doğrular.
 - `AppDatabase.kt`: Room singleton, şema sürümü 4 ve `MIGRATION_1_2`/`MIGRATION_2_3`/`MIGRATION_3_4` geçişleri.
 - `CameraModel.kt`: Oynatma/UI için kullanılan kamera modeli ve entity dönüşümü.
 - `DiscoveryDevice.kt`: Keşfedilen IP, port/protokol, marka/model, UUID ve MAC bilgileri.
@@ -400,3 +407,9 @@ TV kontrol listesi:
 - AAB derlemesinde ABI split otomatik kapatılarak dört ABI'nin tek bundle içinde paketlenmesi; APK derlemesinde ise dört ayrı mimari çıktısı üretilmesi sağlandı.
 - `RELEASE_NOTES_v1.3.md` eklendi; README aktif LibVLC motoru, v1.3 özellikleri, ayrı RTSP/ONVIF hesapları ve güncel dağıtım mimarileriyle eşitlendi.
 - Unit test, lint, R8 release derlemesi, ABI içeriği ve sabit kimlik bilgisi taraması başarıyla doğrulandı.
+- Android Keystore ile kamera sırlarının şifrelenmesi, hash tabanlı PIN, yedekleme dışlama ve sır içermeyen config export eklendi.
+- Config import doğrulama + Room transaction ile veri kaybına dayanıklı hale getirildi.
+- Boot, otomatik IP kurtarma, günlük bakım ve release tanılama logları kullanıcı tercihine bağlandı.
+- Ethernet TV görünürlüğü, AAB dil kaynakları, WebView host/file erişimi, Android 16 geri navigasyonu ve erişilebilirlik/lokalizasyon lint bulguları düzeltildi.
+- 320×180 Android TV banner, gizlilik politikası, MIT lisansı, üçüncü taraf bildirimleri ve Play Store kontrol listesi eklendi.
+- Debug uygulamasına `.debug` applicationId suffix verilerek cihaz testlerinin production paket verisini kaldırması engellendi.

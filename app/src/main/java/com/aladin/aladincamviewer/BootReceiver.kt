@@ -10,6 +10,13 @@ import android.content.Intent
  */
 class BootReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        val preferences = PreferenceHelper(context)
+        val allowed = when (intent.action) {
+            Intent.ACTION_BOOT_COMPLETED -> preferences.startOnBoot
+            "ACTION_DAILY_RESTART" -> preferences.dailyMaintenance
+            else -> false
+        }
+        if (!allowed) return
         if (intent.action == Intent.ACTION_BOOT_COMPLETED || intent.action == "ACTION_DAILY_RESTART") {
             val i = Intent(context, MainActivity::class.java).apply {
                 addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)

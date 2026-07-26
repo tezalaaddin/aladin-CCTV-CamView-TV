@@ -23,13 +23,13 @@ class NetworkMonitor(context: Context, private val onNetworkStatusChanged: (Bool
 
     private val networkCallback = object : ConnectivityManager.NetworkCallback() {
         override fun onAvailable(network: Network) {
-            Log.i(tag, "LAN available network=$network")
+            AppLog.i(tag, "LAN available network=$network")
             mainHandler.post { onNetworkStatusChanged(true) }
         }
 
         override fun onLost(network: Network) {
             val connected = isCurrentlyConnected()
-            Log.w(tag, "LAN lost network=$network anotherLanAvailable=$connected")
+            AppLog.w(tag, "LAN lost network=$network anotherLanAvailable=$connected")
             mainHandler.post { onNetworkStatusChanged(connected) }
         }
     }
@@ -37,7 +37,7 @@ class NetworkMonitor(context: Context, private val onNetworkStatusChanged: (Bool
     fun start() {
         // Check initial state
         val initialStatus = isCurrentlyConnected()
-        Log.d(tag, "LAN monitor start initialConnected=$initialStatus")
+        AppLog.d(tag, "LAN monitor start initialConnected=$initialStatus")
         onNetworkStatusChanged(initialStatus)
 
         val request = NetworkRequest.Builder()

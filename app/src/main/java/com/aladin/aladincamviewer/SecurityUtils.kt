@@ -8,13 +8,9 @@ import androidx.appcompat.app.AlertDialog
 
 object SecurityUtils {
 
-    private const val MASTER_PIN = "0000" // Hardcoded admin override
-
     fun checkPin(context: Context, onResult: (Boolean) -> Unit) {
         val prefHelper = PreferenceHelper(context)
-        val savedPin = prefHelper.appPin
-
-        if (savedPin.isEmpty()) {
+        if (!prefHelper.hasPin) {
             onResult(true)
             return
         }
@@ -33,7 +29,7 @@ object SecurityUtils {
             .setCancelable(false)
             .setPositiveButton(context.getString(R.string.confirm)) { _, _ ->
                 val enteredPin = input.text.toString()
-                if (enteredPin == savedPin || enteredPin == MASTER_PIN) {
+                if (prefHelper.verifyPin(enteredPin)) {
                     onResult(true)
                 } else {
                     Toast.makeText(context, context.getString(R.string.incorrect_pin), Toast.LENGTH_SHORT).show()

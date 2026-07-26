@@ -43,7 +43,7 @@ class OnvifManager(private val ip: String, private val user: String, private val
     )
 
     suspend fun getDeviceDetails(): OnvifDeviceDetails? = withContext(Dispatchers.IO) {
-        Log.d(TAG, "🔍 Starting ONVIF Deep Discovery for IP: $ip")
+        AppLog.d(TAG, "ğŸ” Starting ONVIF Deep Discovery for IP: $ip")
         try {
             val ports = listOf(80, 8080, 28080, 8899, 8000, 5000, 8008, 8888)
             val paths = listOf("/onvif/device_service", "/device_service", "/onvif/device")
@@ -100,18 +100,18 @@ class OnvifManager(private val ip: String, private val user: String, private val
             )
 
         } catch (e: Exception) {
-            Log.e(TAG, "ONVIF Discovery Error", e)
+            AppLog.e(TAG, "ONVIF Discovery Error", e)
             null
         }
     }
 
     suspend fun standardizeEncoderSettings(): Boolean = withContext(Dispatchers.IO) {
-        Log.w(TAG, "🚀 Standardizing ALL profiles on $ip")
+        AppLog.w(TAG, "ğŸš€ Standardizing ALL profiles on $ip")
         try {
             if (serviceUrl.isEmpty()) {
                 val details = getDeviceDetails()
                 if (details == null) {
-                    Log.e(TAG, "Standardization failed: Could not get device details.")
+                    AppLog.e(TAG, "Standardization failed: Could not get device details.")
                     return@withContext false
                 }
             }
@@ -128,7 +128,7 @@ class OnvifManager(private val ip: String, private val user: String, private val
                 val token = matcher.group(1) ?: continue
                 val encoding = matcher.group(2) ?: "H264"
                 
-                Log.d(TAG, "🔧 Standardizing token: $token (Encoding: $encoding)")
+                AppLog.d(TAG, "ğŸ”§ Standardizing token: $token (Encoding: $encoding)")
                 
                 val codecXml = if (encoding.contains("H265")) {
                     "<tt:H265><tt:GovLength>25</tt:GovLength><tt:H265Profile>Main</tt:H265Profile></tt:H265>"
@@ -157,7 +157,7 @@ class OnvifManager(private val ip: String, private val user: String, private val
             }
             return@withContext totalSuccess > 0
         } catch (e: Exception) { 
-            Log.e(TAG, "Standardization failed", e)
+            AppLog.e(TAG, "Standardization failed", e)
             false 
         }
     }

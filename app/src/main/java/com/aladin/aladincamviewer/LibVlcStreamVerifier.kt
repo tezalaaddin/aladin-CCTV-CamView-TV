@@ -50,10 +50,10 @@ object LibVlcStreamVerifier {
             media.release()
             player.play()
             val playable = withTimeoutOrNull(8_000) { result.await() } ?: false
-            Log.i("ALADIN_CAMERA_SETUP", "LibVLC verification endpoint=${RtspEndpointVerifier.safeEndpoint(cleanUrl)} playable=$playable")
+            AppLog.i("ALADIN_CAMERA_SETUP", "LibVLC verification endpoint=${RtspEndpointVerifier.safeEndpoint(cleanUrl)} playable=$playable")
             playable
         } catch (error: Exception) {
-            Log.w("ALADIN_CAMERA_SETUP", "LibVLC verification failed endpoint=${RtspEndpointVerifier.safeEndpoint(cleanUrl)} reason=${error.javaClass.simpleName}")
+            AppLog.w("ALADIN_CAMERA_SETUP", "LibVLC verification failed endpoint=${RtspEndpointVerifier.safeEndpoint(cleanUrl)} reason=${error.javaClass.simpleName}")
             false
         } finally {
             runCatching { player.stop() }

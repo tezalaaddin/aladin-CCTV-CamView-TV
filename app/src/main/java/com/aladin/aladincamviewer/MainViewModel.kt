@@ -10,7 +10,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
 
     init {
         val cameraDao = AppDatabase.getDatabase(application).cameraDao()
-        repository = CameraRepository(cameraDao)
+        repository = CameraRepository(application, cameraDao)
         allCameras = repository.allCameras
     }
 }

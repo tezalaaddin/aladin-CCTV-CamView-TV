@@ -31,7 +31,7 @@ class DiscoveryActivity : AppCompatActivity() {
     private var occupiedSlots = setOf<Int>()
 
     override fun attachBaseContext(newBase: Context) {
-        val lang = newBase.getSharedPreferences("aladin_settings", Context.MODE_PRIVATE)
+        val lang = newBase.getSharedPreferences("aladin_prefs_v2", Context.MODE_PRIVATE)
             .getString("app_lang", "en") ?: "en"
         super.attachBaseContext(LocaleHelper.setLocale(newBase, lang))
     }
@@ -42,7 +42,7 @@ class DiscoveryActivity : AppCompatActivity() {
         TvFocusManager.install(this)
 
         val cameraDao = AppDatabase.getDatabase(this).cameraDao()
-        repository = CameraRepository(cameraDao)
+        repository = CameraRepository(this, cameraDao)
         hybridScanner = HybridScanner(this)
         
         setupRecycler()
@@ -80,7 +80,7 @@ class DiscoveryActivity : AppCompatActivity() {
                 devices.clear()
                 devices.addAll(cameraCandidates)
                 devices.forEach { it.isAdded = existingIps.contains(it.ip) }
-                Log.i(
+                AppLog.i(
                     "ALADIN_DISCOVERY",
                     "Discovery UI candidates=${cameraCandidates.size} networkDevices=${discoveredList.size}"
                 )
@@ -174,7 +174,7 @@ class DiscoveryActivity : AppCompatActivity() {
     ) {
         val verifiedCount = resolved.count { it.second.verified }
         val summary = resolved.joinToString("\n\n") { (device, result) ->
-            val marker = if (result.verified) "✓" else "✕"
+            val marker = if (result.verified) "âœ“" else "âœ•"
             "$marker ${device.ip}  ${result.brand}\n${result.model ?: result.message}\n${result.source}"
         }
         AlertDialog.Builder(this)
@@ -197,7 +197,7 @@ class DiscoveryActivity : AppCompatActivity() {
             resolved.filter { it.second.verified }.forEach { (device, result) ->
                 if (availableSlots.isEmpty()) return@forEach
                 if (repository.isIpAlreadyUsed(device.ip)) {
-                    Log.w("ALADIN_DISCOVERY", "Duplicate camera skipped ip=${device.ip}")
+                    AppLog.w("ALADIN_DISCOVERY", "Duplicate camera skipped ip=${device.ip}")
                     return@forEach
                 }
                 val nextSlot = availableSlots.removeAt(0)

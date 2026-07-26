@@ -13,6 +13,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatActivity
+import androidx.activity.OnBackPressedCallback
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -59,6 +60,9 @@ class MainActivity : AppCompatActivity() {
         setTheme(R.style.Theme_AladinCamViewer)
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() = handleExitRequest()
+        })
         TvFocusManager.install(this)
 
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
@@ -77,7 +81,7 @@ class MainActivity : AppCompatActivity() {
                 networkErrorLayout.visibility = View.VISIBLE
             }
         }
-        val repository = CameraRepository(AppDatabase.getDatabase(this).cameraDao())
+        val repository = CameraRepository(this, AppDatabase.getDatabase(this).cameraDao())
         networkTracker = NetworkTracker.getInstance(applicationContext, repository)
         observeRecoveryProposals()
 
@@ -266,10 +270,10 @@ class MainActivity : AppCompatActivity() {
         networkMonitor.stop()
     }
 
-    override fun onBackPressed() {
+    private fun handleExitRequest() {
         if (backPressedTime + 2000 > System.currentTimeMillis()) {
             SecurityUtils.checkPin(this) { success ->
-                if (success) super.onBackPressed()
+                if (success) finish()
             }
             return
         } else {

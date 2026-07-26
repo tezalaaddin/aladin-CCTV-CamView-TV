@@ -139,4 +139,25 @@
     <string name="discovery_model_value">MODEL: %1$s</string>
     <string name="add_selected_default">SEÇİLENLERİ EKLE</string>
     <string name="duplicate_camera_ip">Bu IP adresine sahip bir kamera zaten kayıtlı.</string>
+    <string name="start_on_boot">TV açılışında başlat</string>
+    <string name="automatic_network_recovery">Otomatik IP kurtarma</string>
+    <string name="daily_maintenance">Günlük bakım</string>
+    <string name="diagnostic_logging">Tanılama kayıtları</string>
+    <string name="pin_configured_hint">PIN ayarlı — değiştirmek için yeni PIN girin</string>
+    <string name="export_configuration">Yapılandırmayı dışa aktar</string>
+    <string name="export_security_notice">Güvenlik nedeniyle dışa aktarılan dosyada RTSP/ONVIF parolaları ve uygulama PIN’i bulunmaz. İçe aktarmadan sonra kimlik bilgileri yeniden girilmelidir.</string>
+    <string name="import_success_count">%1$d kamera içe aktarıldı. Kamera kimlik bilgilerini yeniden girin.</string>
+    <string name="import_failed_detail">İçe aktarma başarısız: %1$s. Mevcut kameralar değiştirilmedi.</string>
+    <string name="rtsp_diagnostic_title">RTSP YAYIN TANILAMA</string>
+    <string name="waiting_for_streams">Yayınlar bekleniyor…</string>
+    <string name="slot_setup_default">YUVA KURULUMU</string>
+    <string name="app_logo_description">Aladin CCTV logosu</string>
+    <string name="camera_slot_default">Kamera Yuvası</string>
+    <string name="tap_to_configure">Yapılandırmak için seçin</string>
+    <string name="generic_device">Genel Cihaz</string>
+    <string name="ip_address_label">IP Adresi:</string>
+    <string name="mac_address_label">MAC Adresi:</string>
+    <string name="firmware_label">Firmware:</string>
+    <string name="protocols_label">Protokoller:</string>
+    <string name="added_label">EKLENDİ</string>
 </resources>

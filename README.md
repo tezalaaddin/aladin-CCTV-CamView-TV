@@ -33,6 +33,10 @@ Aladin CCTV is a professional, high-performance CCTV viewer application specific
 3. Build the project using Gradle.
 4. Deploy to your Android TV via ADB.
 
+Release signing is read from the ignored `keystore.properties` file. Copy
+`keystore.properties.example`, point it to the private upload keystore and never
+commit either file. See [PLAY_STORE_RELEASE_CHECKLIST.md](PLAY_STORE_RELEASE_CHECKLIST.md).
+
 ### APK architecture
 
 Release builds produce separate APKs for `arm64-v8a`, `armeabi-v7a`, `x86` and `x86_64`. LibVLC
@@ -69,6 +73,9 @@ adb logcat -s ALADIN_VLC:V ALADIN_NETWORK:V ALADIN_NETWORK_TRACKER:V ALADIN_DISC
 
 ## 📄 License
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+See [PRIVACY_POLICY.md](PRIVACY_POLICY.md) for the privacy policy and
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) for dependency notices.
 
 ---
 **Developed by Aladin Development**

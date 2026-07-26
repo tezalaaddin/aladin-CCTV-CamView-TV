@@ -59,7 +59,7 @@ object SnapshotUtils {
                 Toast.makeText(context, "Snapshot saved: ${file.absolutePath}", Toast.LENGTH_LONG).show()
             }
         } catch (e: Exception) {
-            e.printStackTrace()
+            AppLog.e("ALADIN_SNAPSHOT", "Snapshot save failed", e)
         }
     }
 }

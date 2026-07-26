@@ -5,6 +5,7 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class ConfigModel(
     val cameras: List<CameraEntity>,
-    val appPin: String,
-    val offlineAlarm: Boolean
+    val appPin: String = "",
+    val offlineAlarm: Boolean = false,
+    val formatVersion: Int = 2
 )

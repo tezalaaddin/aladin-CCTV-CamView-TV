@@ -31,21 +31,21 @@ class CameraConfigurationResolver(private val context: Context) {
     )
 
     suspend fun resolve(input: Input): Result {
-        Log.i(TAG, "Configuration started ip=${input.ip} brandHint=${input.brandHint.orEmpty()}")
+        AppLog.i(TAG, "Configuration started ip=${input.ip} brandHint=${input.brandHint.orEmpty()}")
         var profileMain: String? = null
         var profileSub: String? = null
         for ((main, sub) in CameraBrandProfiles.candidates(input.brandHint, input.ip, input.username, input.password)) {
             if (!isPlayable(main, input)) continue
             profileMain = main
             profileSub = if (isPlayable(sub, input)) sub else null
-            Log.i(TAG, "Brand profile accepted ip=${input.ip} subStreamVerified=${profileSub != null}")
+            AppLog.i(TAG, "Brand profile accepted ip=${input.ip} subStreamVerified=${profileSub != null}")
             break
         }
 
         val onvifUser = input.onvifUsername ?: input.username
         val onvifPass = input.onvifPassword ?: input.password
         val onvif = OnvifManager(input.ip, onvifUser, onvifPass).getDeviceDetails()
-        Log.i(TAG, "ONVIF metadata ip=${input.ip} authenticated=${onvif != null} separateCredentials=${input.onvifUsername != null}")
+        AppLog.i(TAG, "ONVIF metadata ip=${input.ip} authenticated=${onvif != null} separateCredentials=${input.onvifUsername != null}")
 
         if (profileMain != null) {
             return Result(
@@ -70,7 +70,7 @@ class CameraConfigurationResolver(private val context: Context) {
             }
         }
 
-        Log.w(TAG, "Configuration failed ip=${input.ip}; no authenticated playable RTSP stream")
+        AppLog.w(TAG, "Configuration failed ip=${input.ip}; no authenticated playable RTSP stream")
         return Result(
             false, "NONE", onvif?.manufacturer ?: input.brandHint ?: "Unknown", onvif?.model,
             onvif?.firmware, onvif?.serial, null, null, onvif?.ptzSupported == true,
@@ -81,7 +81,7 @@ class CameraConfigurationResolver(private val context: Context) {
 
     private suspend fun isPlayable(url: String, input: Input): Boolean {
         val result = RtspEndpointVerifier.verify(url, input.username, input.password)
-        Log.d(TAG, "Stream tested endpoint=${RtspEndpointVerifier.safeEndpoint(url)} playable=${result.playable} status=${result.statusCode}")
+        AppLog.d(TAG, "Stream tested endpoint=${RtspEndpointVerifier.safeEndpoint(url)} playable=${result.playable} status=${result.statusCode}")
         return result.playable || LibVlcStreamVerifier.verify(context, url, input.username, input.password)
     }
 
