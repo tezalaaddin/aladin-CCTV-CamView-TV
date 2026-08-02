@@ -67,6 +67,9 @@ class SettingsActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.btn_import).setOnClickListener { importLauncher.launch(arrayOf("application/json")) }
         findViewById<Button>(R.id.btn_language).setOnClickListener { showLanguagePicker() }
+        findViewById<Button>(R.id.btn_about).setOnClickListener {
+            startActivity(Intent(this, AboutActivity::class.java))
+        }
 
         setupObservers()
     }

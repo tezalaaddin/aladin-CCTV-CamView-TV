@@ -165,4 +165,17 @@
     <string name="firmware_label">Firmware:</string>
     <string name="protocols_label">Protocols:</string>
     <string name="added_label">ADDED</string>
+    <string name="about_title">ABOUT</string>
+    <string name="about_description">Local-first RTSP and ONVIF camera viewing for Android TV and phones.</string>
+    <string name="about_version_format">Version %1$s (%2$d)</string>
+    <string name="check_for_updates">CHECK FOR UPDATES</string>
+    <string name="open_play_store">PLAY STORE</string>
+    <string name="opening_play_store_update">Opening Google Play to check for updates…</string>
+    <string name="website">WEBSITE</string>
+    <string name="privacy_policy">PRIVACY POLICY</string>
+    <string name="github_page">GITHUB</string>
+    <string name="open_source_licenses">OPEN SOURCE LICENSES</string>
+    <string name="open_source_summary">Aladin CCTV uses open-source components including LibVLC, AndroidX, Material Components, Room, OkHttp and Kotlin Coroutines. Copyright and license terms remain with their respective owners. Full notices are available in the project repository.</string>
+    <string name="no_browser_available">No compatible browser is available.</string>
+    <string name="about_copyright">© 2026 Erişim Bilgisayar · Aladin CCTV</string>
 </resources>

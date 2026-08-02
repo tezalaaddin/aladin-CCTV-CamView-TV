@@ -202,6 +202,19 @@
                             app:strokeColor="#4DFFFFFF"
                             app:layout_constraintTop_toBottomOf="@id/button_layout" />
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_about"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/about_title"
+                            android:textColor="@color/white"
+                            app:cornerRadius="8dp"
+                            app:icon="@android:drawable/ic_menu_info_details"
+                            app:strokeColor="#55FF7A00"
+                            app:layout_constraintTop_toBottomOf="@id/btn_language" />
+
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 

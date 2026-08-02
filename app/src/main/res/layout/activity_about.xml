@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0E0F12"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:padding="28dp">
+
+        <ImageView
+            android:layout_width="112dp"
+            android:layout_height="112dp"
+            android:contentDescription="@string/app_logo_description"
+            android:scaleType="fitCenter"
+            android:src="@drawable/aladin_cctv_logo" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:text="@string/app_name"
+            android:textColor="@color/white"
+            android:textSize="30sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/about_version"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:textColor="@color/brand_orange"
+            android:textSize="15sp"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:gravity="center"
+            android:maxWidth="720dp"
+            android:text="@string/about_description"
+            android:textColor="#B3FFFFFF"
+            android:textSize="15sp" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            app:cardBackgroundColor="#17191E"
+            app:cardCornerRadius="18dp"
+            app:strokeColor="#33FFFFFF"
+            app:strokeWidth="1dp">
+
+            <GridLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:columnCount="2"
+                android:padding="12dp"
+                android:useDefaultMargins="true">
+
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_check_updates" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="64dp" android:layout_columnWeight="1" android:text="@string/check_for_updates" app:icon="@android:drawable/stat_sys_download" app:strokeColor="@color/brand_orange" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_play_store" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="64dp" android:layout_columnWeight="1" android:text="@string/open_play_store" app:icon="@android:drawable/ic_media_play" app:strokeColor="#55FFFFFF" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_website" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="64dp" android:layout_columnWeight="1" android:text="@string/website" app:icon="@android:drawable/ic_menu_view" app:strokeColor="#55FFFFFF" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_privacy" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="64dp" android:layout_columnWeight="1" android:text="@string/privacy_policy" app:icon="@android:drawable/ic_lock_lock" app:strokeColor="#55FFFFFF" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_github" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="64dp" android:layout_columnWeight="1" android:text="@string/github_page" app:icon="@android:drawable/ic_menu_share" app:strokeColor="#55FFFFFF" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_licenses" style="@style/Widget.MaterialComponents.Button.OutlinedButton" android:layout_width="0dp" android:layout_height="64dp" android:layout_columnWeight="1" android:text="@string/open_source_licenses" app:icon="@android:drawable/ic_menu_info_details" app:strokeColor="#55FFFFFF" />
+            </GridLayout>
+        </com.google.android.material.card.MaterialCardView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="22dp"
+            android:text="@string/about_copyright"
+            android:textColor="#66FFFFFF"
+            android:textSize="12sp" />
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

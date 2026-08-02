@@ -423,3 +423,12 @@ TV kontrol listesi:
 - TV ve yatay ekran davranışı iki sütun, dört kamera ve mevcut D-pad sayfalamasıyla değişmeden korunur.
 - Değişiklik, gerçek `23124RA7EO` arm64 telefon üzerinde imzalı release APK ile iki canlı RTSP yayını kullanılarak doğrulandı.
 - Telefon uyumluluk güncellemesinin Google Play'e yeniden yüklenebilmesi için sürüm `versionName 1.3.1` ve `versionCode 5` olarak artırıldı.
+
+### 2 Ağustos 2026 — Hakkında ve güncelleme merkezi
+
+- Ayarlar ekranına TV kumandası ve dokunmatik kullanımına uygun `Hakkında` girişi eklendi.
+- `AboutActivity`, uygulamanın gerçek `BuildConfig` sürüm adı/kodunu gösterir; sabit sürüm metni kullanılmaz.
+- Güncelleme kontrolü ve Play Store düğmeleri önce cihazdaki `market://` sayfasını, Play Store bulunmazsa HTTPS mağaza sayfasını açar.
+- Ürün web sitesi, gizlilik politikası ve GitHub proje sayfası merkezi bağlantılar olarak sunulur.
+- Kullanılan başlıca açık kaynak bileşenler için uygulama içi lisans özeti eklendi.
+- Bu güncelleme `versionName 1.3.2` ve `versionCode 6` olarak paketlenir; yayın notları `RELEASE_NOTES_v1.3.2.md` dosyasındadır.
