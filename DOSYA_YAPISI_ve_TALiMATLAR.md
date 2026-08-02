@@ -413,3 +413,13 @@ TV kontrol listesi:
 - Ethernet TV görünürlüğü, AAB dil kaynakları, WebView host/file erişimi, Android 16 geri navigasyonu ve erişilebilirlik/lokalizasyon lint bulguları düzeltildi.
 - 320×180 Android TV banner, gizlilik politikası, MIT lisansı, üçüncü taraf bildirimleri ve Play Store kontrol listesi eklendi.
 - Debug uygulamasına `.debug` applicationId suffix verilerek cihaz testlerinin production paket verisini kaldırması engellendi.
+
+### 2 Ağustos 2026 — Telefon dikey ana ekran desteği
+
+- Android TV desteği korunurken `android.software.leanback` zorunluluğu kaldırıldı; uygulama artık Play Store tarafından dokunmatik Android telefonlara da uygun kabul edilir.
+- Telefon ve Android TV başlatıcı intent filtreleri ayrıldı; aynı uygulama hem standart telefon launcher'ında hem Leanback TV launcher'ında listelenir.
+- `layout-port/activity_main.xml` ile dikey telefonlara özel kompakt üst çubuk eklendi. Devriye ve Ayarlar metinleri yerine erişilebilir açıklamaları bulunan 48dp simge düğmeleri kullanılır.
+- Dikey telefonda kamera ızgarası tek sütuna ve sayfa başına iki yayına geçer. `CameraAdapter`, kamera kartlarını 16:9 oranında ölçerek RTSP görüntüsünün uzun/dar biçimde bozulmasını önler.
+- TV ve yatay ekran davranışı iki sütun, dört kamera ve mevcut D-pad sayfalamasıyla değişmeden korunur.
+- Değişiklik, gerçek `23124RA7EO` arm64 telefon üzerinde imzalı release APK ile iki canlı RTSP yayını kullanılarak doğrulandı.
+- Telefon uyumluluk güncellemesinin Google Play'e yeniden yüklenebilmesi için sürüm `versionName 1.3.1` ve `versionCode 5` olarak artırıldı.

@@ -2,6 +2,7 @@ package com.aladin.aladincamviewer
 
 import android.content.Context
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -38,7 +39,10 @@ class MainActivity : AppCompatActivity() {
     private var backPressedTime: Long = 0
     private var currentCameras: List<CameraEntity> = emptyList()
     private var currentPage = 0
-    private val pageSize = 4
+    private val isPortraitPhone: Boolean
+        get() = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+    private val pageSize: Int
+        get() = if (isPortraitPhone) 2 else 4
     
     private val viewModel: MainViewModel by viewModels()
     private val clockHandler = Handler(Looper.getMainLooper())
@@ -71,7 +75,7 @@ class MainActivity : AppCompatActivity() {
         clockText = findViewById(R.id.clock_text)
         pageIndicator = findViewById(R.id.page_indicator)
         networkErrorLayout = findViewById(R.id.network_error_layout)
-        recyclerView.layoutManager = GridLayoutManager(this, 2)
+        recyclerView.layoutManager = GridLayoutManager(this, if (isPortraitPhone) 1 else 2)
 
         networkMonitor = NetworkMonitor(this) { isConnected ->
             if (isConnected) {

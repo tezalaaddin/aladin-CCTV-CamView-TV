@@ -1,6 +1,7 @@
 package com.aladin.aladincamviewer
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -32,7 +33,14 @@ class CameraAdapter(private val cameras: List<CameraModel>) : RecyclerView.Adapt
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CameraViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_camera, parent, false)
         val layoutParams = view.layoutParams
-        layoutParams.height = parent.height / 2
+        layoutParams.height = if (
+            parent.resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
+        ) {
+            // Preserve the camera image instead of stretching it into a tall TV grid cell.
+            ((parent.width - parent.paddingLeft - parent.paddingRight) * 9f / 16f).toInt()
+        } else {
+            parent.height / 2
+        }
         view.layoutParams = layoutParams
         return CameraViewHolder(view)
     }
