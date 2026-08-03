@@ -70,6 +70,9 @@ class SettingsActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_about).setOnClickListener {
             startActivity(Intent(this, AboutActivity::class.java))
         }
+        findViewById<Button>(R.id.btn_recorders).setOnClickListener {
+            startActivity(Intent(this, RecordersActivity::class.java))
+        }
 
         setupObservers()
     }

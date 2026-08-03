@@ -1,6 +1,7 @@
 package com.aladin.aladincamviewer
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -250,7 +251,7 @@ class DiscoveryActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val device = list[position]
-            holder.brand.text = device.brand
+            holder.brand.text = if (device.isRecorderCandidate()) "NVR • ${device.brand}" else device.brand
             holder.model.text = getString(
                 R.string.discovery_model_value,
                 device.model?.takeIf { it.isNotBlank() } ?: getString(R.string.unknown_value)
@@ -270,7 +271,11 @@ class DiscoveryActivity : AppCompatActivity() {
                 onToggle(device)
             }
             holder.card.setOnClickListener {
-                if (!device.isAdded) holder.check.isChecked = !holder.check.isChecked
+                if (device.isRecorderCandidate()) {
+                    startActivity(Intent(this@DiscoveryActivity, RecordersActivity::class.java)
+                        .putExtra("recorder_ip", device.ip)
+                        .putExtra("recorder_name", device.model.orEmpty()))
+                } else if (!device.isAdded) holder.check.isChecked = !holder.check.isChecked
             }
         }
 

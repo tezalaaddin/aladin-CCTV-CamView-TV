@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var activeRecoveryProposal: RecoveryProposal? = null
     
     private var backPressedTime: Long = 0
-    private var currentCameras: List<CameraEntity> = emptyList()
+    private var currentCameras: List<CameraModel> = emptyList()
     private var currentPage = 0
     private val isPortraitPhone: Boolean
         get() = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
@@ -182,7 +182,7 @@ class MainActivity : AppCompatActivity() {
         recyclerView.adapter = null
         val intent = Intent(this, FullScreenCameraActivity::class.java).apply {
             putExtra("tour_mode", true)
-            putParcelableArrayListExtra("camera_list", ArrayList(currentCameras.map { it.toModel() }))
+            putParcelableArrayListExtra("camera_list", ArrayList(currentCameras))
         }
         startActivity(intent)
     }
@@ -192,7 +192,7 @@ class MainActivity : AppCompatActivity() {
         
         val start = currentPage * pageSize
         val end = minOf(start + pageSize, currentCameras.size)
-        val pageItems = currentCameras.subList(start, end).map { it.toModel() }
+        val pageItems = currentCameras.subList(start, end)
         
         recyclerView.adapter = CameraAdapter(pageItems)
         val totalPages = (currentCameras.size + pageSize - 1) / pageSize
@@ -204,19 +204,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
-
-    private fun CameraEntity.toModel() = CameraModel(
-        name = name,
-        mainStreamUrl = mainStreamUrl,
-        subStreamUrl = subStreamUrl,
-        ipAddress = ipAddress,
-        ptzSupported = ptzSupported,
-        username = username,
-        password = password,
-        onvifUsername = onvifUsername,
-        onvifPassword = onvifPassword,
-        brand = brand
-    )
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
         if (keyCode == KeyEvent.KEYCODE_MENU) {

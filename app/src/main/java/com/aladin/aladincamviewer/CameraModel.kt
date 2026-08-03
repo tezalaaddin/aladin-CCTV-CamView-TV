@@ -16,7 +16,9 @@ data class CameraModel(
     val password: String = "",
     val onvifUsername: String = "",
     val onvifPassword: String = "",
-    val brand: String = "Custom"
+    val brand: String = "Custom",
+    val recorderId: Long = 0,
+    val recorderChannel: Int = 0
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
         parcel.readString() ?: "",
@@ -28,7 +30,9 @@ data class CameraModel(
         parcel.readString() ?: "",
         parcel.readString() ?: "",
         parcel.readString() ?: "",
-        parcel.readString() ?: "Custom"
+        parcel.readString() ?: "Custom",
+        parcel.readLong(),
+        parcel.readInt()
     )
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
@@ -42,6 +46,8 @@ data class CameraModel(
         parcel.writeString(onvifUsername)
         parcel.writeString(onvifPassword)
         parcel.writeString(brand)
+        parcel.writeLong(recorderId)
+        parcel.writeInt(recorderChannel)
     }
 
     override fun describeContents(): Int = 0

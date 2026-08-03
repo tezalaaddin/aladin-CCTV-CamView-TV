@@ -12,4 +12,10 @@ data class DiscoveryDevice(
     var isAdded: Boolean = false,
     var snapshotUri: String? = null,
     var isSelected: Boolean = false
-)
+) {
+    fun isRecorderCandidate(): Boolean {
+        val identity = "${model.orEmpty()} $brand".uppercase()
+        return identity.contains("NVR") || identity.contains("DVR") ||
+            Regex("DS-7[167]\\d{2}NI").containsMatchIn(identity)
+    }
+}

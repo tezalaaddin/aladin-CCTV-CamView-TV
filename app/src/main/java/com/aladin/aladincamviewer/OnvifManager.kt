@@ -82,11 +82,19 @@ class OnvifManager(private val ip: String, private val user: String, private val
             val resolvedProfiles = profiles.mapNotNull { profile ->
                 getStreamUri(profile.token)?.let { profile to it }
             }.sortedByDescending { it.first.pixels }
-            val mainUrl = resolvedProfiles.firstOrNull()?.second
-            val subUrl = resolvedProfiles.lastOrNull()?.second
-            val channels = resolvedProfiles.mapIndexed { index, entry ->
-                OnvifChannel(index + 1, entry.first.name.ifBlank { "Profile ${index + 1}" }, entry.second, entry.second)
-            }
+            val groupedProfiles = resolvedProfiles.groupBy { it.first.sourceToken.ifBlank { it.first.token } }
+            val channels = groupedProfiles.entries.mapIndexed { index, group ->
+                val streams = group.value.sortedByDescending { it.first.pixels }
+                val channelNumber = Regex("\\d+").find(group.key)?.value?.toIntOrNull() ?: index + 1
+                OnvifChannel(
+                    channelNumber,
+                    streams.first().first.name.ifBlank { "Channel $channelNumber" },
+                    streams.first().second,
+                    streams.last().second
+                )
+            }.sortedBy { it.channelNumber }
+            val mainUrl = channels.firstOrNull()?.mainUrl
+            val subUrl = channels.firstOrNull()?.subUrl
 
             return@withContext OnvifDeviceDetails(
                 manufacturer = manufacturer?.trim(),
@@ -204,7 +212,7 @@ class OnvifManager(private val ip: String, private val user: String, private val
         return if (matcher.find()) matcher.group(1) else null
     }
 
-    private data class ProfileInfo(val token: String, val name: String, val pixels: Long)
+    private data class ProfileInfo(val token: String, val name: String, val pixels: Long, val sourceToken: String)
 
     private fun extractProfiles(xml: String?): List<ProfileInfo> {
         if (xml == null) return emptyList()
@@ -220,7 +228,9 @@ class OnvifManager(private val ip: String, private val user: String, private val
             val name = extractXmlTag(body, "Name").orEmpty()
             val width = extractXmlTag(body, "Width")?.toLongOrNull() ?: 0
             val height = extractXmlTag(body, "Height")?.toLongOrNull() ?: 0
-            if (profiles.none { it.token == token }) profiles.add(ProfileInfo(token, name, width * height))
+            val sourceBlock = Regex("<(?:[a-zA-Z0-9]+:)?VideoSourceConfiguration\\b.*?</(?:[a-zA-Z0-9]+:)?VideoSourceConfiguration>", setOf(RegexOption.IGNORE_CASE, RegexOption.DOT_MATCHES_ALL)).find(body)?.value
+            val sourceToken = extractXmlTag(sourceBlock, "SourceToken").orEmpty()
+            if (profiles.none { it.token == token }) profiles.add(ProfileInfo(token, name, width * height, sourceToken))
         }
         return profiles
     }

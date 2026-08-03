@@ -12,6 +12,8 @@ Aladin CCTV is a professional, high-performance CCTV viewer application specific
     - Supports Continuous Move (Up, Down, Left, Right) and Zoom.
 - **📁 Multi-Camera Support:** Add and manage multiple cameras with custom branding.
 - **Local-first:** Camera streams are opened directly over the local network and camera records are stored in Room.
+- **Hikvision NVR:** Add one recorder, discover/select its channels, watch main/sub streams and browse date-based ISAPI recordings.
+- **Target recorder profiles:** DS-7616NI-Q1 and DS-7104NI-Q1/4P/M channels can share one NVR IP without weakening duplicate-camera protection.
 - **Separate credentials:** RTSP and ONVIF accounts can be configured independently when a camera requires it.
 - **🛠️ Automated Fixes:** "Fix Camera" feature to automatically switch older cameras to H.264 for TV compatibility.
 

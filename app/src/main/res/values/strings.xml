@@ -178,4 +178,26 @@
     <string name="open_source_summary">Aladin CCTV uses open-source components including LibVLC, AndroidX, Material Components, Room, OkHttp and Kotlin Coroutines. Copyright and license terms remain with their respective owners. Full notices are available in the project repository.</string>
     <string name="no_browser_available">No compatible browser is available.</string>
     <string name="about_copyright">© 2026 Erişim Bilgisayar · Aladin CCTV</string>
+    <string name="recorders_title">RECORDERS &amp; NVR</string>
+    <string name="recorders_description">Add an NVR once, discover its active channels, watch live streams and browse recordings.</string>
+    <string name="recorder_name">Recorder name</string>
+    <string name="ip_address">IP address</string>
+    <string name="username">Username</string>
+    <string name="password">Password</string>
+    <string name="discover_nvr_channels">VERIFY &amp; DISCOVER CHANNELS</string>
+    <string name="save_recorder">SAVE RECORDER</string>
+    <string name="enter_recorder_ip">Enter the recorder IP address.</string>
+    <string name="nvr_discovery_failed">Recorder could not be verified: %1$s</string>
+    <string name="select_at_least_one_channel">Select at least one channel.</string>
+    <string name="recorder_saved">Recorder and channels saved.</string>
+    <string name="recordings_title">RECORDINGS</string>
+    <string name="recordings_for">%1$s RECORDINGS</string>
+    <string name="search_recordings">SEARCH</string>
+    <string name="select_date_to_search">Select a channel and date to browse the NVR timeline.</string>
+    <string name="invalid_date">Use YYYY-MM-DD date format.</string>
+    <string name="no_recordings_found">No recordings found for this date.</string>
+    <string name="recording_search_failed">Recording search failed: %1$s</string>
+    <string name="minutes_format">%1$d min</string>
+    <string name="recording_search_unavailable">Recorder search unavailable</string>
+    <string name="open_nvr_web">OPEN NVR WEB PAGE</string>
 </resources>

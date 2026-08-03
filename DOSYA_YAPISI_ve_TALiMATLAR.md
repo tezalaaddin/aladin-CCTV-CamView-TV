@@ -66,7 +66,7 @@ Uygulama bir bulut/NVR sunucusu değildir. Kamera akışlarına cihazdan doğrud
 | Android | compile SDK 37, target SDK 36, min SDK 24, Java/JVM 11 |
 | Yapı | Tek `app` modülü; Activity + ViewModel + Repository yaklaşımı |
 | Video | LibVLC `3.6.5` (`libvlc-all`) |
-| Veri | Room 2.8.4, şema sürümü 4, KSP2 |
+| Veri | Room 2.8.4, şema sürümü 5, KSP2 |
 | Ağ | OkHttp 4.12.0, UDP WS-Discovery, Android NSD/mDNS, soket/ping taraması |
 | UI | AppCompat/Material, XML layout, RecyclerView, özel `RadarView` |
 | Serileştirme | kotlinx.serialization JSON |
@@ -177,6 +177,10 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 - `EditCameraViewModel.kt`: Kamera getirme/kaydetme/silme işlemlerini repository üzerinden yürütür; kontrol sonuçlarını UI’a bildirir.
 - `DiscoveryActivity.kt`: Tarama ilerlemesi ve sonuç listesi; ortak kimlik bilgileriyle seçili kameraları toplu ekler ve mükerrer IP’leri atlar.
 - `DiagnosticActivity.kt`: RTSP bağlantı seçeneklerini ve LibVLC olaylarını ayrıntılı loglayan geliştirme/tanı ekranı.
+- `RecordersActivity.kt`: Hikvision NVR ekleme/düzenleme, ISAPI kimlik doğrulaması ve kanal seçim ekranı.
+- `RecordingsActivity.kt`: NVR kanalı ve tarih seçimi, kayıt parçası listesi ve geçmiş oynatma geçişi.
+- `HikvisionIsapiClient.kt`: Hikvision Digest HTTP kimlik doğrulaması, cihaz/kanal keşfi, canlı RTSP yolu ve `ContentMgmt/search` kayıt sorguları.
+- `RecorderRepository.kt`: NVR kimlik bilgileri ile kanal URL'lerini şifreleyerek Room üzerinde saklar ve birleşik ana ekran akışına sunar.
 - `WebPlaybackActivity.kt`: Kameranın HTTP web sayfasını WebView içinde açan yardımcı ekran.
 - `RadarView.kt`: Keşif ekranındaki radar animasyonunu çizer; görünüm eklenince animasyonu başlatır, ayrılınca durdurur.
 
@@ -249,6 +253,8 @@ LibVLC yerel ikili dosyaları APK boyutunun büyük bölümünü oluşturur. Bu 
 | `uuid` | Yalnızca geçerli RFC UUID; DHCP güçlü kimliği |
 | `macAddress` | Normalize edilerek karşılaştırılan güçlü cihaz kimliği |
 
+`RecorderEntity`, bir fiziksel NVR'ı IP + HTTP portu ve varsa seri numarasıyla tekilleştirir. `RecorderChannelEntity`, aynı NVR IP'sini paylaşan kanal numarası, ad, ana/alt RTSP yolları ve etkinlik seçimini saklar. `(recorderId, channelNumber)` benzersizdir. Bu ayrı model sayesinde `CameraEntity.ipAddress` benzersizlik kuralı kaldırılmaz. NVR kullanıcı adı/parolası ve kanal RTSP adresleri `CredentialCrypto` ile şifreli saklanır.
+
 Kimlik alanları boş olabilir; eski kayıtlar aynı IP’de tekrar görüldüğünde güvenilir ONVIF/RTSP keşif bilgisinden tamamlanır. MAC/UUID yokken kimlik bilgileri ortak olabileceği için sessiz IP değişikliği yapılmaz.
 
 ---
@@ -286,6 +292,8 @@ Kullanılan etiketler:
 | `ALADIN_PTZ` | PTZ komutları ve sonuçları |
 | `ALADIN_WATCHDOG` | Günlük bakım/alarm planı |
 | `ALADIN_DIAG` | Teknik tanı ekranı |
+| `ALADIN_NVR` | NVR doğrulama, model ve kanal keşif sonucu; kimlik bilgisi içermez |
+| `ALADIN_REPLAY` | Kayıt arama/oynatma sonucu, kanal ve sonuç sayısı; playback URL'si içermez |
 
 Yeni etiket adları `ALADIN_` ile başlamalı. URL loglanacaksa kullanıcı/parola kaldırılmalı; tercihen yalnızca kamera adı, IP/port, olay, süre, deneme numarası ve hata sınıfı yazılmalıdır.
 
@@ -307,6 +315,8 @@ Mevcut birim testleri:
 - `CameraBrandProfilesTest.kt`: Marka eş adları, RTSP kimlik bilgisi kodlama ve aday URL tekilleştirme davranışı.
 - `ExampleUnitTest.kt`: Temel örnek test; anlamlı proje testiyle değiştirilmesi önerilir.
 - `ExampleInstrumentedTest.kt`: Temel cihaz testi; Room migration ve TV akışlarıyla genişletilmelidir.
+- `HikvisionNvrProfileTest.kt`: Hedef Hikvision modellerinin kanal kapasitesi ve ana/alt akış kimliği üretimi.
+- `SecurityAndMigrationInstrumentedTest.kt`: 4→5 NVR tablo migrasyonu ve aynı NVR kanalının mükerrer eklenememesi.
 
 TV kontrol listesi:
 
@@ -432,3 +442,14 @@ TV kontrol listesi:
 - Ürün web sitesi, gizlilik politikası ve GitHub proje sayfası merkezi bağlantılar olarak sunulur.
 - Kullanılan başlıca açık kaynak bileşenler için uygulama içi lisans özeti eklendi.
 - Bu güncelleme `versionName 1.3.2` ve `versionCode 6` olarak paketlenir; yayın notları `RELEASE_NOTES_v1.3.2.md` dosyasındadır.
+
+### 3 Ağustos 2026 — Hikvision NVR ve geçmiş kayıt altyapısı
+
+- Ping yanıtı vermeyen kayıt cihazlarının bulunabilmesi için subnet taraması ICMP yerine HTTP, RTSP ve Hikvision yönetim portlarını da canlılık kanıtı olarak kullanır.
+- Kamera IP benzersizliğini bozmayan `RecorderEntity` ve `RecorderChannelEntity` modeli, Room şema v5 ve veri kaybetmeyen 4→5 migrasyonu eklendi.
+- Hikvision ISAPI Digest kimlik doğrulamasıyla cihaz bilgisi ve kanal listesi alınır. DS-7616NI-Q1 ile DS-7104NI-Q1/4P/M için kanal kapasitesi profilleri ve `{kanal}01/{kanal}02` canlı akış yolları bulunur.
+- Seçilen NVR kanalları normal kameralarla ana ekranda birleşir; NVR kanalının tam ekran görünümünde geçmiş kayıt eylemi sunulur.
+- `ContentMgmt/search` ile gün/kanal bazında kayıt parçaları sorgulanır; sonuçlar TV kumandasına uygun listede gösterilir ve playback URI LibVLC ile oynatılır.
+- NVR kimlik bilgileri ve credential içeren RTSP URL'leri şifreli saklanır. `ALADIN_NVR` ve `ALADIN_REPLAY` logları kullanıcı adı, parola veya playback URI yazmaz.
+- `NVR_GELISTIRME_PLANI.md`, koddan bağımsız ve gerçek restoran cihazında yapılacak doğrulamaları ayrı izleyen kabul belgesi olarak eklendi.
+- NVR desteği `versionName 1.4.0` ve `versionCode 7` olarak paketlenir; kullanıcıya dönük sürüm notları `RELEASE_NOTES_v1.4.0.md` dosyasındadır.

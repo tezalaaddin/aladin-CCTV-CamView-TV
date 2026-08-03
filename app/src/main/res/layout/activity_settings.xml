@@ -215,6 +215,19 @@
                             app:strokeColor="#55FF7A00"
                             app:layout_constraintTop_toBottomOf="@id/btn_language" />
 
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/btn_recorders"
+                            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="12dp"
+                            android:text="@string/recorders_title"
+                            android:textColor="@color/white"
+                            app:cornerRadius="8dp"
+                            app:icon="@android:drawable/ic_menu_slideshow"
+                            app:strokeColor="#55FF7A00"
+                            app:layout_constraintTop_toBottomOf="@id/btn_about" />
+
                 </androidx.constraintlayout.widget.ConstraintLayout>
             </com.google.android.material.card.MaterialCardView>
 

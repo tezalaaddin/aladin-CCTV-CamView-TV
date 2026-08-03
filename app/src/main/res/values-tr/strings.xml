@@ -173,4 +173,26 @@
     <string name="open_source_summary">Aladin CCTV; LibVLC, AndroidX, Material Components, Room, OkHttp ve Kotlin Coroutines dahil açık kaynak bileşenler kullanır. Telif ve lisans koşulları ilgili sahiplerine aittir. Ayrıntılı bildirimler proje deposunda bulunur.</string>
     <string name="no_browser_available">Uyumlu bir tarayıcı bulunamadı.</string>
     <string name="about_copyright">© 2026 Erişim Bilgisayar · Aladin CCTV</string>
+    <string name="recorders_title">KAYIT CİHAZLARI VE NVR</string>
+    <string name="recorders_description">NVR cihazını bir kez ekleyin; aktif kanalları keşfedin, canlı yayınları ve geçmiş kayıtları izleyin.</string>
+    <string name="recorder_name">Kayıt cihazı adı</string>
+    <string name="ip_address">IP adresi</string>
+    <string name="username">Kullanıcı adı</string>
+    <string name="password">Parola</string>
+    <string name="discover_nvr_channels">DOĞRULA VE KANALLARI BUL</string>
+    <string name="save_recorder">KAYIT CİHAZINI KAYDET</string>
+    <string name="enter_recorder_ip">Kayıt cihazının IP adresini girin.</string>
+    <string name="nvr_discovery_failed">Kayıt cihazı doğrulanamadı: %1$s</string>
+    <string name="select_at_least_one_channel">En az bir kanal seçin.</string>
+    <string name="recorder_saved">Kayıt cihazı ve kanalları kaydedildi.</string>
+    <string name="recordings_title">KAYITLAR</string>
+    <string name="recordings_for">%1$s KAYITLARI</string>
+    <string name="search_recordings">ARA</string>
+    <string name="select_date_to_search">NVR zaman çizelgesini görmek için kanal ve tarih seçin.</string>
+    <string name="invalid_date">Tarihi YYYY-AA-GG biçiminde girin.</string>
+    <string name="no_recordings_found">Bu tarihte kayıt bulunamadı.</string>
+    <string name="recording_search_failed">Kayıt araması başarısız: %1$s</string>
+    <string name="minutes_format">%1$d dk</string>
+    <string name="recording_search_unavailable">Kayıt araması kullanılamıyor</string>
+    <string name="open_nvr_web">NVR WEB SAYFASINI AÇ</string>
 </resources>

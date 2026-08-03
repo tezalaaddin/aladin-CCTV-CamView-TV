@@ -72,6 +72,9 @@
             android:exported="false"
             android:label="@string/about_title" />
 
+        <activity android:name=".RecordersActivity" android:exported="false" android:label="@string/recorders_title" />
+        <activity android:name=".RecordingsActivity" android:exported="false" android:label="@string/recordings_title" />
+
         <activity
             android:name=".EditCameraActivity"
             android:label="Configure Camera"

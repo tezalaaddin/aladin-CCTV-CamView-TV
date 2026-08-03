@@ -12,6 +12,8 @@ $tags = @(
     "ALADIN_PTZ:V",
     "ALADIN_WATCHDOG:V",
     "ALADIN_DIAG:V",
+    "ALADIN_NVR:V",
+    "ALADIN_REPLAY:V",
     "AndroidRuntime:E",
     "*:S"
 )

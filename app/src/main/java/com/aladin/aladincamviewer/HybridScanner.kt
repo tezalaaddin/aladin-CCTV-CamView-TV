@@ -185,10 +185,13 @@ class HybridScanner(private val context: Context) {
                 scanSemaphore.withPermit {
                     val host = "$prefix.$i"
                     try {
-                        val inet = InetAddress.getByName(host)
-                        if (inet.isReachable(800)) {
+                        val reachableByPing = runCatching { InetAddress.getByName(host).isReachable(350) }.getOrDefault(false)
+                        // Many NVRs intentionally ignore ICMP. An open management/RTSP port is
+                        // sufficient evidence that the address is alive, so ping must not gate discovery.
+                        val reachableByService = listOf(80, 8000, 554, 443).any { port -> isPortOpen(host, port, 260) }
+                        if (reachableByPing || reachableByService) {
                             val device = discoveredDevices.getOrPut(host) { DiscoveryDevice(host) }
-                            if (!device.protocols.contains("PING")) device.protocols.add("PING")
+                            if (reachableByPing && !device.protocols.contains("PING")) device.protocols.add("PING")
                             investigateDevice(device)
                         }
                     } catch (e: Exception) {}
@@ -196,6 +199,11 @@ class HybridScanner(private val context: Context) {
             }
         }.joinAll()
     }
+
+    private fun isPortOpen(host: String, port: Int, timeoutMs: Int): Boolean = runCatching {
+        Socket().use { socket -> socket.connect(InetSocketAddress(host, port), timeoutMs) }
+        true
+    }.getOrDefault(false)
 
     /**
      * Deep Investigation: Grabs banners, checks ports, and refines brand.

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent" android:layout_height="match_parent" android:background="#121212">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content"
+        android:orientation="vertical" android:padding="24dp">
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:text="@string/recorders_title" android:textColor="@color/brand_orange" android:textSize="28sp" android:textStyle="bold" />
+        <TextView android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="6dp"
+            android:text="@string/recorders_description" android:textColor="#AAFFFFFF" android:textSize="14sp" />
+        <LinearLayout android:id="@+id/saved_recorders" android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="16dp" android:orientation="vertical" />
+        <com.google.android.material.card.MaterialCardView android:layout_width="match_parent" android:layout_height="wrap_content"
+            android:layout_marginTop="18dp" app:cardBackgroundColor="#202024" app:cardCornerRadius="18dp"
+            app:strokeColor="#55FF7A00" app:strokeWidth="1dp" xmlns:app="http://schemas.android.com/apk/res-auto">
+            <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <EditText android:id="@+id/recorder_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/recorder_name" android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
+                <EditText android:id="@+id/recorder_ip" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/ip_address" android:inputType="text" android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
+                <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">
+                    <EditText android:id="@+id/recorder_http_port" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="HTTP (80)" android:inputType="number" android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
+                    <EditText android:id="@+id/recorder_rtsp_port" android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:hint="RTSP (554)" android:inputType="number" android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
+                </LinearLayout>
+                <EditText android:id="@+id/recorder_username" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/username" android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
+                <EditText android:id="@+id/recorder_password" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/password" android:inputType="textPassword" android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_discover_recorder" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:text="@string/discover_nvr_channels" android:backgroundTint="@color/brand_orange" />
+                <ProgressBar android:id="@+id/recorder_progress" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:visibility="gone" />
+                <LinearLayout android:id="@+id/discovered_channels" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" />
+                <com.google.android.material.button.MaterialButton android:id="@+id/btn_save_recorder" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:text="@string/save_recorder" android:visibility="gone" />
+            </LinearLayout>
+        </com.google.android.material.card.MaterialCardView>
+    </LinearLayout>
+</ScrollView>

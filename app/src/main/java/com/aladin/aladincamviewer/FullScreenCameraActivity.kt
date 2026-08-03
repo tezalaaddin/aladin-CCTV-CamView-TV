@@ -74,6 +74,7 @@ class FullScreenCameraActivity : AppCompatActivity() {
         ptzOverlay = findViewById(R.id.ptz_overlay)
 
         val currentCamera: CameraModel? = intent.getParcelableExtra("camera_data")
+        val playbackUrl = intent.getStringExtra("playback_url")
         isTourMode = intent.getBooleanExtra("tour_mode", false)
         tourCameras = intent.getParcelableArrayListExtra("camera_list")
         currentTourIndex = intent.getIntExtra("start_index", 0)
@@ -92,10 +93,24 @@ class FullScreenCameraActivity : AppCompatActivity() {
         
         startClock()
         
-        if (isTourMode) {
+        if (!playbackUrl.isNullOrBlank()) {
+            camTitle?.text = intent.getStringExtra("playback_title") ?: getString(R.string.recordings_title)
+            findViewById<View>(R.id.btn_ptz_toggle)?.visibility = View.GONE
+            playerManager?.playStream(playbackUrl)
+        } else if (isTourMode) {
             startTour()
         } else {
             currentCamera?.let { playCamera(it) }
+        }
+
+        if (currentCamera?.recorderId ?: 0 > 0) {
+            findViewById<View>(R.id.btn_recordings)?.apply {
+                visibility = View.VISIBLE
+                setOnClickListener {
+                    startActivity(android.content.Intent(this@FullScreenCameraActivity, RecordingsActivity::class.java)
+                        .putExtra("recorder_id", currentCamera!!.recorderId))
+                }
+            }
         }
         
         setupPtzButtons()
