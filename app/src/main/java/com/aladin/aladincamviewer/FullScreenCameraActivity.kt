@@ -10,11 +10,14 @@ import android.view.KeyEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.ProgressBar
+import android.widget.Button
+import android.widget.SeekBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
+import androidx.constraintlayout.widget.ConstraintLayout
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -40,11 +43,25 @@ class FullScreenCameraActivity : AppCompatActivity() {
     private var isTourMode = false
     private var tourCameras: ArrayList<CameraModel>? = null
     private var currentTourIndex = 0
+    private var playbackStartEpochMs = 0L
+    private var playbackEndEpochMs = 0L
+    private var playbackUsesAbsoluteTime = false
+    private var playbackUsesUrlTime = false
+    private var playbackUrl: String? = null
+    private var isSeekingPlayback = false
+    private var playbackRateIndex = 1
+    private val playbackRates = floatArrayOf(0.5f, 1f, 2f, 4f)
+    private var playbackChromeVisible = true
+    private val hidePlaybackChrome = Runnable { setPlaybackChromeVisible(false) }
 
     private val handler = Handler(Looper.getMainLooper())
     private val clockRunnable = object : Runnable {
         override fun run() {
-            clockText?.text = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+            if (playbackStartEpochMs == 0L) {
+                clockText?.text = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date())
+            } else {
+                updatePlaybackPosition()
+            }
             handler.postDelayed(this, 1000)
         }
     }
@@ -74,7 +91,7 @@ class FullScreenCameraActivity : AppCompatActivity() {
         ptzOverlay = findViewById(R.id.ptz_overlay)
 
         val currentCamera: CameraModel? = intent.getParcelableExtra("camera_data")
-        val playbackUrl = intent.getStringExtra("playback_url")
+        playbackUrl = intent.getStringExtra("playback_url")
         isTourMode = intent.getBooleanExtra("tour_mode", false)
         tourCameras = intent.getParcelableArrayListExtra("camera_list")
         currentTourIndex = intent.getIntExtra("start_index", 0)
@@ -95,8 +112,13 @@ class FullScreenCameraActivity : AppCompatActivity() {
         
         if (!playbackUrl.isNullOrBlank()) {
             camTitle?.text = intent.getStringExtra("playback_title") ?: getString(R.string.recordings_title)
-            findViewById<View>(R.id.btn_ptz_toggle)?.visibility = View.GONE
-            playerManager?.playStream(playbackUrl)
+            setupPlaybackControls()
+            playerManager?.initializePlayer(forceSoftwareDecoder = true)
+            playerManager?.playStream(playbackUrl!!, intent.getLongExtra("playback_start_offset_ms", 0L))
+            playerManager?.fitVideoToScreen(true)
+            if (playbackUsesAbsoluteTime && !playbackUsesUrlTime) {
+                playerManager?.seekTo(playbackStartEpochMs)
+            }
         } else if (isTourMode) {
             startTour()
         } else {
@@ -107,8 +129,10 @@ class FullScreenCameraActivity : AppCompatActivity() {
             findViewById<View>(R.id.btn_recordings)?.apply {
                 visibility = View.VISIBLE
                 setOnClickListener {
+                    playerManager?.releasePlayer()
                     startActivity(android.content.Intent(this@FullScreenCameraActivity, RecordingsActivity::class.java)
                         .putExtra("recorder_id", currentCamera!!.recorderId))
+                    finish()
                 }
             }
         }
@@ -225,9 +249,125 @@ class FullScreenCameraActivity : AppCompatActivity() {
         handler.post(clockRunnable)
     }
 
+    private fun setupPlaybackControls() {
+        playbackStartEpochMs = intent.getLongExtra("playback_start_epoch_ms", 0L)
+        playbackEndEpochMs = intent.getLongExtra("playback_end_epoch_ms", playbackStartEpochMs + 86_399_000L)
+        playbackUsesAbsoluteTime = intent.getBooleanExtra("playback_absolute_time", false)
+        playbackUsesUrlTime = intent.getBooleanExtra("playback_time_in_url", false)
+
+        findViewById<View>(R.id.control_panel).visibility = View.GONE
+        findViewById<View>(R.id.playback_controls).visibility = View.VISIBLE
+        findViewById<TextView>(R.id.stream_status_text).setText(R.string.playback_recorded)
+
+        (videoLayout?.layoutParams as? ConstraintLayout.LayoutParams)?.let { params ->
+            params.width = 0
+            params.height = 0
+            params.startToStart = ConstraintLayout.LayoutParams.PARENT_ID
+            params.endToEnd = ConstraintLayout.LayoutParams.PARENT_ID
+            params.topToBottom = R.id.top_bar_full
+            params.bottomToTop = R.id.playback_controls
+            videoLayout?.layoutParams = params
+        }
+
+        val seekBar = findViewById<SeekBar>(R.id.playback_seekbar)
+        seekBar.max = ((playbackEndEpochMs - playbackStartEpochMs) / 1000L).coerceIn(1L, Int.MAX_VALUE.toLong()).toInt()
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onStartTrackingTouch(seekBar: SeekBar) {
+                isSeekingPlayback = true
+                handler.removeCallbacks(hidePlaybackChrome)
+            }
+            override fun onProgressChanged(seekBar: SeekBar, progress: Int, fromUser: Boolean) {
+                if (fromUser) showPlaybackTime(playbackStartEpochMs + progress * 1000L)
+            }
+            override fun onStopTrackingTouch(seekBar: SeekBar) {
+                val targetEpoch = playbackStartEpochMs + seekBar.progress * 1000L
+                seekPlaybackTo(targetEpoch)
+                isSeekingPlayback = false
+                schedulePlaybackChromeHide()
+            }
+        })
+
+        findViewById<View>(R.id.playback_rewind).setOnClickListener { skipPlayback(-30_000L); schedulePlaybackChromeHide() }
+        findViewById<View>(R.id.playback_forward).setOnClickListener { skipPlayback(30_000L); schedulePlaybackChromeHide() }
+        findViewById<Button>(R.id.playback_pause).setOnClickListener { button ->
+            val paused = playerManager?.togglePause() ?: false
+            (button as Button).setText(if (paused) R.string.playback_resume else R.string.playback_pause)
+            schedulePlaybackChromeHide()
+        }
+        findViewById<TextView>(R.id.playback_speed).setOnClickListener {
+            playbackRateIndex = (playbackRateIndex + 1) % playbackRates.size
+            val rate = playbackRates[playbackRateIndex]
+            if (playerManager?.setPlaybackRate(rate) == true) {
+                (it as TextView).text = "${rate.toString().removeSuffix(".0")}x"
+            }
+            schedulePlaybackChromeHide()
+        }
+        videoLayout?.setOnClickListener { setPlaybackChromeVisible(!playbackChromeVisible) }
+        showPlaybackTime(playbackStartEpochMs)
+        seekBar.requestFocus()
+        schedulePlaybackChromeHide()
+    }
+
+    private fun schedulePlaybackChromeHide() {
+        handler.removeCallbacks(hidePlaybackChrome)
+        handler.postDelayed(hidePlaybackChrome, 6_000L)
+    }
+
+    private fun setPlaybackChromeVisible(visible: Boolean) {
+        playbackChromeVisible = visible
+        findViewById<View>(R.id.top_bar_full).visibility = if (visible) View.VISIBLE else View.GONE
+        findViewById<View>(R.id.playback_controls).visibility = if (visible) View.VISIBLE else View.GONE
+        if (visible) schedulePlaybackChromeHide()
+    }
+
+    private fun skipPlayback(deltaMs: Long) {
+        val raw = playerManager?.playbackTimeMs() ?: return
+        val currentEpoch = if (playbackUsesAbsoluteTime) raw else playbackStartEpochMs + raw
+        val targetEpoch = (currentEpoch + deltaMs).coerceIn(playbackStartEpochMs, playbackEndEpochMs)
+        seekPlaybackTo(targetEpoch)
+    }
+
+    private fun seekPlaybackTo(targetEpoch: Long) {
+        if (!playbackUsesUrlTime) {
+            playerManager?.seekTo(if (playbackUsesAbsoluteTime) targetEpoch else targetEpoch - playbackStartEpochMs)
+            return
+        }
+        val current = playbackUrl ?: return
+        val formatter = java.time.format.DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss'Z'")
+            .withZone(java.time.ZoneOffset.UTC)
+        val startValue = formatter.format(java.time.Instant.ofEpochMilli(targetEpoch))
+        val endValue = formatter.format(java.time.Instant.ofEpochMilli(playbackEndEpochMs))
+        val withoutTimes = current
+            .replace(Regex("(?i)&?starttime=[^&]*"), "")
+            .replace(Regex("(?i)&?endtime=[^&]*"), "")
+            .trimEnd('?', '&')
+        val separator = if ('?' in withoutTimes) "&" else "?"
+        playbackUrl = "$withoutTimes${separator}starttime=$startValue&endtime=$endValue"
+        playerManager?.playStream(playbackUrl!!)
+        playerManager?.fitVideoToScreen(true)
+        showPlaybackTime(targetEpoch)
+    }
+
+    private fun updatePlaybackPosition() {
+        val raw = playerManager?.playbackTimeMs() ?: return
+        val epoch = if (playbackUsesAbsoluteTime) raw else playbackStartEpochMs + raw
+        if (epoch !in playbackStartEpochMs..playbackEndEpochMs) return
+        showPlaybackTime(epoch)
+        if (!isSeekingPlayback) {
+            findViewById<SeekBar>(R.id.playback_seekbar).progress = ((epoch - playbackStartEpochMs) / 1000L).toInt()
+        }
+    }
+
+    private fun showPlaybackTime(epochMs: Long) {
+        val formatted = SimpleDateFormat("dd.MM.yyyy HH:mm:ss", Locale.getDefault()).format(Date(epochMs))
+        findViewById<TextView>(R.id.playback_datetime).text = formatted
+        clockText?.text = formatted
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         handler.removeCallbacks(clockRunnable)
+        handler.removeCallbacks(hidePlaybackChrome)
         ptzManager?.close()
         playerManager?.releasePlayer()
         tourJob?.cancel()

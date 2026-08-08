@@ -2,6 +2,7 @@ package com.aladin.aladincamviewer
 
 import android.content.Intent
 import android.os.Bundle
+import android.app.TimePickerDialog
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ import java.time.format.DateTimeFormatter
 
 class RecordingsActivity : AppCompatActivity() {
     private val client = HikvisionIsapiClient()
+    private val profileGClient = OnvifProfileGClient()
     private lateinit var repository: RecorderRepository
     private lateinit var recorder: RecorderEntity
     private var channels = emptyList<RecorderChannelEntity>()
@@ -27,6 +29,16 @@ class RecordingsActivity : AppCompatActivity() {
         repository = RecorderRepository(this)
         findViewById<RecyclerView>(R.id.recordings_list).layoutManager = LinearLayoutManager(this)
         findViewById<EditText>(R.id.recording_date).setText(LocalDate.now().toString())
+        findViewById<EditText>(R.id.recording_time).apply {
+            setText("00:00")
+            isFocusable = false
+            setOnClickListener {
+                val current = runCatching { LocalTime.parse(text) }.getOrDefault(LocalTime.MIDNIGHT)
+                TimePickerDialog(this@RecordingsActivity, { _, hour, minute ->
+                    setText(String.format("%02d:%02d", hour, minute))
+                }, current.hour, current.minute, true).show()
+            }
+        }
         lifecycleScope.launch {
             val id = intent.getLongExtra("recorder_id", 0)
             recorder = repository.getRecorder(id) ?: return@launch finish()
@@ -44,22 +56,32 @@ class RecordingsActivity : AppCompatActivity() {
         val date = runCatching { LocalDate.parse(findViewById<EditText>(R.id.recording_date).text) }.getOrElse {
             return@launch Toast.makeText(this@RecordingsActivity, R.string.invalid_date, Toast.LENGTH_SHORT).show()
         }
+        val time = runCatching { LocalTime.parse(findViewById<EditText>(R.id.recording_time).text) }.getOrElse {
+            return@launch Toast.makeText(this@RecordingsActivity, R.string.invalid_time, Toast.LENGTH_SHORT).show()
+        }
         val zone = ZoneId.systemDefault()
-        val start = date.atStartOfDay(zone).toInstant()
+        val start = date.atTime(time).atZone(zone).toInstant()
         val end = date.plusDays(1).atStartOfDay(zone).toInstant().minusMillis(1)
         showProgress(true)
         runCatching {
-            check(NvrStreamProfile.supportsRecordingSearch(recorder.manufacturer)) {
-                getString(R.string.profile_g_playback_not_implemented, recorder.manufacturer)
+            if (recorder.manufacturer.equals(NvrStreamProfile.HIKVISION, true)) {
+                client.recordings(recorder, channel.channelNumber, start, end)
+            } else {
+                profileGClient.recordings(recorder, channel.channelNumber, start, end)
             }
-            client.recordings(recorder, channel.channelNumber, start, end)
         }
             .onSuccess { segments ->
                 findViewById<RecyclerView>(R.id.recordings_list).adapter = SegmentAdapter(segments) { segment ->
+                    val requestedStart = start.coerceIn(segment.start, segment.end)
                     val safeUrl = client.authenticatedPlaybackUrl(recorder, segment.playbackUri)
                     startActivity(Intent(this@RecordingsActivity, FullScreenCameraActivity::class.java)
                         .putExtra("playback_url", safeUrl)
-                        .putExtra("playback_title", "${channel.name} • ${format(segment.start)}"))
+                        .putExtra("playback_start_offset_ms", segment.startOffsetMs)
+                        .putExtra("playback_start_epoch_ms", requestedStart.toEpochMilli())
+                        .putExtra("playback_end_epoch_ms", segment.end.toEpochMilli())
+                        .putExtra("playback_absolute_time", !recorder.manufacturer.equals(NvrStreamProfile.HIKVISION, true))
+                        .putExtra("playback_time_in_url", recorder.manufacturer.equals(NvrStreamProfile.TIANDY, true))
+                        .putExtra("playback_title", "${channel.name} • ${format(requestedStart)}"))
                 }
                 findViewById<TextView>(R.id.recordings_empty).apply {
                     visibility = if (segments.isEmpty()) View.VISIBLE else View.GONE

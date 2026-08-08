@@ -19,13 +19,16 @@ class CctvPlayerManager(
     private val retryPolicy = RetryPolicy()
     private var mediaPlayer: MediaPlayer? = MediaPlayer(libVLC)
     private var currentUrl: String? = null
+    private var currentStartTimeMs = 0L
     private var isSubStream = false
+    private var forceSoftwareDecoder = false
     private var hardwareDecoderEnabled = false
     private var retryAttempt = 0
     private var playGeneration = 0
     private var released = false
     private var retryScheduled = false
     private var lastBufferBucket = -1
+    private var pendingSeekTimeMs: Long? = null
     private val stallDetector = PlaybackStallDetector()
     private var watchdogGeneration = -1
     private var watchdogTicks = 0
@@ -72,9 +75,10 @@ class CctvPlayerManager(
         mediaPlayer?.videoScale = MediaPlayer.ScaleType.SURFACE_FILL
     }
 
-    fun initializePlayer(isSubStream: Boolean = false) {
+    fun initializePlayer(isSubStream: Boolean = false, forceSoftwareDecoder: Boolean = false) {
         this.isSubStream = isSubStream
-        hardwareDecoderEnabled = !isSubStream
+        this.forceSoftwareDecoder = forceSoftwareDecoder
+        hardwareDecoderEnabled = !isSubStream && !forceSoftwareDecoder
     }
 
     fun attachView(videoLayout: VLCVideoLayout) {
@@ -84,7 +88,43 @@ class CctvPlayerManager(
         }
     }
 
-    fun playStream(url: String) {
+    fun fitVideoToScreen(fit: Boolean) {
+        mediaPlayer?.videoScale = if (fit) MediaPlayer.ScaleType.SURFACE_BEST_FIT else MediaPlayer.ScaleType.SURFACE_FILL
+    }
+
+    fun seekTo(timeMs: Long) {
+        val target = timeMs.coerceAtLeast(0L)
+        val player = mediaPlayer
+        if (player?.isPlaying == true) {
+            player.time = target
+            pendingSeekTimeMs = null
+            AppLog.d(tag, "RTSP seek applied endpoint=${currentUrl?.let(::describeEndpoint)} targetMs=$target")
+        } else {
+            pendingSeekTimeMs = target
+            AppLog.d(tag, "RTSP seek queued endpoint=${currentUrl?.let(::describeEndpoint)} targetMs=$target")
+        }
+    }
+
+    fun skipBy(deltaMs: Long) {
+        val player = mediaPlayer ?: return
+        seekTo(player.time + deltaMs)
+    }
+
+    fun setPlaybackRate(rate: Float): Boolean {
+        val player = mediaPlayer ?: return false
+        player.setRate(rate)
+        return true
+    }
+
+    fun togglePause(): Boolean {
+        val player = mediaPlayer ?: return false
+        if (player.isPlaying) player.pause() else player.play()
+        return !player.isPlaying
+    }
+
+    fun playbackTimeMs(): Long = mediaPlayer?.time ?: 0L
+
+    fun playStream(url: String, startTimeMs: Long = 0L) {
         if (url.isBlank()) {
             AppLog.w(tag, "RTSP start ignored: empty URL")
             notifyState(false, "YayÄ±n adresi boÅŸ")
@@ -96,7 +136,8 @@ class CctvPlayerManager(
         playGeneration++
         retryAttempt = 0
         currentUrl = url
-        if (isNewStream) hardwareDecoderEnabled = !isSubStream
+        currentStartTimeMs = startTimeMs.coerceAtLeast(0L)
+        if (isNewStream) hardwareDecoderEnabled = !isSubStream && !forceSoftwareDecoder
         released = false
         retryScheduled = false
         lastBufferBucket = -1
@@ -118,7 +159,15 @@ class CctvPlayerManager(
                     retryAttempt = 0
                     retryScheduled = false
                     notifyState(false, null)
-                    mediaPlayer?.videoScale = MediaPlayer.ScaleType.SURFACE_FILL
+                    pendingSeekTimeMs?.let { target ->
+                        mainHandler.postDelayed({
+                            if (!released && generation == playGeneration && mediaPlayer?.isPlaying == true) {
+                                mediaPlayer?.time = target
+                                pendingSeekTimeMs = null
+                                AppLog.d(tag, "RTSP queued seek applied endpoint=$endpoint targetMs=$target")
+                            }
+                        }, 250L)
+                    }
                     startPlaybackWatchdog(generation)
                 }
                 MediaPlayer.Event.Buffering -> {
@@ -144,6 +193,7 @@ class CctvPlayerManager(
                 addOption(":network-caching=$cacheMs")
                 addOption(":rtsp-tcp")
                 addOption(":no-audio")
+                if (currentStartTimeMs > 0L) addOption(":start-time=${currentStartTimeMs / 1000.0}")
             }
             mediaPlayer?.media = media
             media.release()
@@ -157,6 +207,9 @@ class CctvPlayerManager(
     private fun scheduleRetry(url: String, generation: Int, endpoint: String, reason: String) {
         if (released || generation != playGeneration || retryScheduled) return
         stopPlaybackWatchdog()
+        if (pendingSeekTimeMs == null) {
+            mediaPlayer?.time?.takeIf { it > 0L }?.let { pendingSeekTimeMs = it }
+        }
         if (hardwareDecoderEnabled && (reason == "decoder_or_network_error" || reason == "video_frames_stalled")) {
             hardwareDecoderEnabled = false
             AppLog.w(tag, "RTSP decoder fallback endpoint=$endpoint hardware=failed next=software reason=$reason")

@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView
 import org.videolan.libvlc.util.VLCVideoLayout
 
 class CameraAdapter(private val cameras: List<CameraModel>) : RecyclerView.Adapter<CameraAdapter.CameraViewHolder>() {
+    private val activeHolders = mutableSetOf<CameraViewHolder>()
 
     class CameraViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val videoLayout: VLCVideoLayout = view.findViewById(R.id.player_view)
@@ -47,6 +48,7 @@ class CameraAdapter(private val cameras: List<CameraModel>) : RecyclerView.Adapt
     }
 
     override fun onBindViewHolder(holder: CameraViewHolder, position: Int) {
+        activeHolders += holder
         val camera = cameras[position]
         holder.cameraTitle.text = camera.name
         holder.errorText.text = ""
@@ -86,6 +88,20 @@ class CameraAdapter(private val cameras: List<CameraModel>) : RecyclerView.Adapt
 
     override fun onViewRecycled(holder: CameraViewHolder) {
         super.onViewRecycled(holder)
+        release(holder)
+    }
+
+    override fun onDetachedFromRecyclerView(recyclerView: RecyclerView) {
+        releaseAll()
+        super.onDetachedFromRecyclerView(recyclerView)
+    }
+
+    fun releaseAll() {
+        activeHolders.toList().forEach(::release)
+    }
+
+    private fun release(holder: CameraViewHolder) {
+        activeHolders -= holder
         holder.playerManager?.releasePlayer()
         holder.playerManager = null
     }

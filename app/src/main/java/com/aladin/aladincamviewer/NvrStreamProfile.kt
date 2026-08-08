@@ -37,7 +37,7 @@ object NvrStreamProfile {
         }
     }
 
-    fun supportsRecordingSearch(manufacturer: String) = manufacturer.equals(HIKVISION, true)
+    fun supportsRecordingSearch(manufacturer: String) = true
 
     private fun encode(value: String) = java.net.URLEncoder.encode(value, "UTF-8").replace("+", "%20")
 }

@@ -304,6 +304,7 @@ class MainActivity : AppCompatActivity() {
         activeRecoveryProposal = null
         recoveryDialog?.dismiss()
         recoveryDialog = null
+        (recyclerView.adapter as? CameraAdapter)?.releaseAll()
         recyclerView.adapter = null
         networkMonitor.stop()
     }

@@ -14,7 +14,7 @@ import javax.xml.parsers.DocumentBuilderFactory
 
 data class HikvisionDeviceInfo(val name: String, val model: String, val serialNumber: String)
 data class HikvisionChannel(val number: Int, val name: String, val enabled: Boolean)
-data class RecordingSegment(val start: Instant, val end: Instant, val playbackUri: String)
+data class RecordingSegment(val start: Instant, val end: Instant, val playbackUri: String, val startOffsetMs: Long = 0)
 
 object HikvisionNvrProfile {
     fun streamId(channel: Int, subStream: Boolean): Int {
@@ -97,7 +97,7 @@ class HikvisionIsapiClient(private val connectTimeoutMs: Int = 3500, private val
 
     fun authenticatedPlaybackUrl(recorder: RecorderEntity, uri: String): String {
         if (!uri.startsWith("rtsp://", true)) return uri
-        val withoutScheme = uri.substringAfter("rtsp://").substringAfter('@')
+        val withoutScheme = uri.substring("rtsp://".length).substringAfter('@')
         return "rtsp://${encodeUserInfo(recorder.username)}:${encodeUserInfo(recorder.password)}@$withoutScheme"
     }
 

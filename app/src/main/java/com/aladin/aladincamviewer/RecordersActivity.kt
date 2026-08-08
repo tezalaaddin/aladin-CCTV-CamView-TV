@@ -99,7 +99,6 @@ class RecordersActivity : AppCompatActivity() {
             }
         }.onSuccess { (info, channels) ->
             discovered = channels
-            findViewById<EditText>(R.id.recorder_name).setText(info.name)
             renderChannels(channels)
             findViewById<View>(R.id.btn_save_recorder).visibility = View.VISIBLE
             AppLog.i("ALADIN_NVR", "NVR verified model=${info.model} channelCount=${channels.size}")

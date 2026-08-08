@@ -201,5 +201,11 @@
     <string name="profile_g_playback_not_implemented">%1$s ONVIF Profile G destekliyor; ancak uygulamada Profile G kayıt oynatma henüz uygulanmadı. Kayıt cihazının web arayüzünü kullanabilirsiniz.</string>
     <string name="minutes_format">%1$d dk</string>
     <string name="recording_search_unavailable">Kayıt araması kullanılamıyor</string>
+    <string name="playback_rewind">30 saniye geri</string>
+    <string name="playback_forward">30 saniye ileri</string>
+    <string name="playback_pause">Duraklat</string>
+    <string name="playback_resume">Oynat</string>
+    <string name="playback_recorded">KAYIT</string>
+    <string name="invalid_time">HH:mm biçiminde geçerli bir saat girin.</string>
     <string name="open_nvr_web">NVR WEB SAYFASINI AÇ</string>
 </resources>

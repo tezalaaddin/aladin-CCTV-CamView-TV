@@ -206,5 +206,11 @@
     <string name="profile_g_playback_not_implemented">%1$s supports ONVIF Profile G, but Profile G recording playback is not implemented in this app yet. You can use the recorder web interface.</string>
     <string name="minutes_format">%1$d min</string>
     <string name="recording_search_unavailable">Recorder search unavailable</string>
+    <string name="playback_rewind">Rewind 30 seconds</string>
+    <string name="playback_forward">Forward 30 seconds</string>
+    <string name="playback_pause">Pause</string>
+    <string name="playback_resume">Play</string>
+    <string name="playback_recorded">RECORDED</string>
+    <string name="invalid_time">Enter a valid time in HH:mm format.</string>
     <string name="open_nvr_web">OPEN NVR WEB PAGE</string>
 </resources>
