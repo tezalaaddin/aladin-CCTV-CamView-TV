@@ -26,7 +26,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                     ipAddress = row.recorder.ipAddress,
                     username = row.recorder.username,
                     password = row.recorder.password,
-                    brand = "Hikvision NVR",
+                    brand = "${row.recorder.manufacturer} NVR",
                     recorderId = row.recorder.id,
                     recorderChannel = row.channel.channelNumber
                 )

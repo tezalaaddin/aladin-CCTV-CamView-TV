@@ -181,6 +181,9 @@
     <string name="recorders_title">RECORDERS &amp; NVR</string>
     <string name="recorders_description">Add an NVR once, discover its active channels, watch live streams and browse recordings.</string>
     <string name="recorder_name">Recorder name</string>
+    <string name="recorder_manufacturer">Recorder manufacturer</string>
+    <string-array name="recorder_manufacturers"><item>Hikvision</item><item>Tiandy</item><item>Dahua</item><item>Hanwha Wisenet</item><item>Uniview (UNV)</item><item>XMeye</item></string-array>
+    <string name="recorder_channel_count">Channel count</string>
     <string name="ip_address">IP address</string>
     <string name="username">Username</string>
     <string name="password">Password</string>
@@ -190,6 +193,9 @@
     <string name="nvr_discovery_failed">Recorder could not be verified: %1$s</string>
     <string name="select_at_least_one_channel">Select at least one channel.</string>
     <string name="recorder_saved">Recorder and channels saved.</string>
+    <string name="delete_recorder">Delete</string>
+    <string name="delete_recorder_confirm">Delete %1$s and all of its channels?</string>
+    <string name="recorder_deleted">Recorder and its channels deleted.</string>
     <string name="recordings_title">RECORDINGS</string>
     <string name="recordings_for">%1$s RECORDINGS</string>
     <string name="search_recordings">SEARCH</string>
@@ -197,6 +203,7 @@
     <string name="invalid_date">Use YYYY-MM-DD date format.</string>
     <string name="no_recordings_found">No recordings found for this date.</string>
     <string name="recording_search_failed">Recording search failed: %1$s</string>
+    <string name="profile_g_playback_not_implemented">%1$s supports ONVIF Profile G, but Profile G recording playback is not implemented in this app yet. You can use the recorder web interface.</string>
     <string name="minutes_format">%1$d min</string>
     <string name="recording_search_unavailable">Recorder search unavailable</string>
     <string name="open_nvr_web">OPEN NVR WEB PAGE</string>

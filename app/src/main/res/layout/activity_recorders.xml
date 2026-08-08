@@ -13,6 +13,11 @@
             android:layout_marginTop="18dp" app:cardBackgroundColor="#202024" app:cardCornerRadius="18dp"
             app:strokeColor="#55FF7A00" app:strokeWidth="1dp" xmlns:app="http://schemas.android.com/apk/res-auto">
             <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="20dp">
+                <Spinner android:id="@+id/recorder_manufacturer" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:entries="@array/recorder_manufacturers" android:prompt="@string/recorder_manufacturer" />
+                <EditText android:id="@+id/recorder_channel_count" android:layout_width="match_parent" android:layout_height="wrap_content"
+                    android:hint="@string/recorder_channel_count" android:inputType="number" android:text="20"
+                    android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
                 <EditText android:id="@+id/recorder_name" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/recorder_name" android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
                 <EditText android:id="@+id/recorder_ip" android:layout_width="match_parent" android:layout_height="wrap_content" android:hint="@string/ip_address" android:inputType="text" android:textColor="@color/white" android:textColorHint="#88FFFFFF" />
                 <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal">

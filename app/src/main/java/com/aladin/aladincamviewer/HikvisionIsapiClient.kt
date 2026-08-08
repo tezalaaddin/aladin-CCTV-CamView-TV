@@ -90,8 +90,9 @@ class HikvisionIsapiClient(private val connectTimeoutMs: Int = 3500, private val
     }
 
     fun liveUrl(recorder: RecorderEntity, channel: Int, subStream: Boolean): String {
-        val streamId = HikvisionNvrProfile.streamId(channel, subStream)
-        return credentialedRtsp(recorder, "/Streaming/Channels/$streamId")
+        return credentialedRtsp(recorder, NvrStreamProfile.livePath(
+            recorder.manufacturer, channel, subStream, recorder.username, recorder.password
+        ))
     }
 
     fun authenticatedPlaybackUrl(recorder: RecorderEntity, uri: String): String {

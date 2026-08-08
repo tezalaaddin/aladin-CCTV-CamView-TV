@@ -14,12 +14,14 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val repository: CameraRepository
     private val prefHelper: PreferenceHelper
     val allCameras: Flow<List<CameraEntity>>
+    val recorderChannels: Flow<List<RecorderChannelWithRecorder>>
 
     init {
         val cameraDao = AppDatabase.getDatabase(application).cameraDao()
         repository = CameraRepository(application, cameraDao)
         prefHelper = PreferenceHelper(application)
         allCameras = repository.allCameras
+        recorderChannels = RecorderRepository(application).enabledChannels
     }
 
     fun updatePin(pin: String) {

@@ -18,6 +18,7 @@ class CameraAdapter(private val cameras: List<CameraModel>) : RecyclerView.Adapt
         val progressBar: ProgressBar = view.findViewById(R.id.loading_progress)
         val errorText: TextView = view.findViewById(R.id.error_text)
         val statusLed: View = view.findViewById(R.id.status_led)
+        val cameraTitle: TextView = view.findViewById(R.id.camera_title)
         val emptyPlaceholder: View = view.findViewById(R.id.empty_placeholder)
         var playerManager: CctvPlayerManager? = null
 
@@ -47,6 +48,8 @@ class CameraAdapter(private val cameras: List<CameraModel>) : RecyclerView.Adapt
 
     override fun onBindViewHolder(holder: CameraViewHolder, position: Int) {
         val camera = cameras[position]
+        holder.cameraTitle.text = camera.name
+        holder.errorText.text = ""
         
         if (camera.subStreamUrl.isEmpty()) {
             holder.emptyPlaceholder.isVisible = true
@@ -63,6 +66,7 @@ class CameraAdapter(private val cameras: List<CameraModel>) : RecyclerView.Adapt
                 onStateChanged = { isLoading, error ->
                     holder.progressBar.isVisible = isLoading
                     holder.errorText.isVisible = error != null
+                    holder.errorText.text = error.orEmpty()
                     holder.statusLed.setBackgroundResource(if (error != null) R.drawable.led_offline else R.drawable.led_online)
                 }
             )

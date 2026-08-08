@@ -7,6 +7,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.view.KeyEvent
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
 import android.widget.LinearLayout
@@ -43,6 +45,8 @@ class MainActivity : AppCompatActivity() {
         get() = resources.configuration.orientation == Configuration.ORIENTATION_PORTRAIT
     private val pageSize: Int
         get() = if (isPortraitPhone) 2 else 4
+    private val totalPages: Int
+        get() = if (isPortraitPhone) 1 else (currentCameras.size + pageSize - 1) / pageSize
     
     private val viewModel: MainViewModel by viewModels()
     private val clockHandler = Handler(Looper.getMainLooper())
@@ -76,6 +80,7 @@ class MainActivity : AppCompatActivity() {
         pageIndicator = findViewById(R.id.page_indicator)
         networkErrorLayout = findViewById(R.id.network_error_layout)
         recyclerView.layoutManager = GridLayoutManager(this, if (isPortraitPhone) 1 else 2)
+        installTouchPaging()
 
         networkMonitor = NetworkMonitor(this) { isConnected ->
             if (isConnected) {
@@ -188,14 +193,27 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun displayCurrentPage(focusIndex: Int = -1) {
-        if (currentCameras.isEmpty()) return
+        if (currentCameras.isEmpty()) {
+            recyclerView.adapter = CameraAdapter(emptyList())
+            pageIndicator.visibility = View.GONE
+            return
+        }
+
+        if (isPortraitPhone) {
+            currentPage = 0
+            recyclerView.adapter = CameraAdapter(currentCameras)
+            pageIndicator.visibility = View.GONE
+            return
+        }
+
+        currentPage = currentPage.coerceIn(0, (totalPages - 1).coerceAtLeast(0))
         
         val start = currentPage * pageSize
         val end = minOf(start + pageSize, currentCameras.size)
         val pageItems = currentCameras.subList(start, end)
         
         recyclerView.adapter = CameraAdapter(pageItems)
-        val totalPages = (currentCameras.size + pageSize - 1) / pageSize
+        pageIndicator.visibility = View.VISIBLE
         pageIndicator.text = getString(R.string.page_format, currentPage + 1, totalPages)
 
         if (focusIndex != -1) {
@@ -203,6 +221,35 @@ class MainActivity : AppCompatActivity() {
                 recyclerView.layoutManager?.findViewByPosition(focusIndex)?.requestFocus()
             }
         }
+    }
+
+    private fun installTouchPaging() {
+        if (isPortraitPhone) return
+        val detector = GestureDetector(this, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(event: MotionEvent) = true
+
+            override fun onFling(start: MotionEvent?, end: MotionEvent, velocityX: Float, velocityY: Float): Boolean {
+                val first = start ?: return false
+                val deltaX = end.x - first.x
+                if (kotlin.math.abs(deltaX) < 120 || kotlin.math.abs(velocityX) < 250 ||
+                    kotlin.math.abs(deltaX) <= kotlin.math.abs(end.y - first.y)) return false
+                return if (deltaX < 0 && currentPage + 1 < totalPages) {
+                    currentPage++
+                    displayCurrentPage()
+                    true
+                } else if (deltaX > 0 && currentPage > 0) {
+                    currentPage--
+                    displayCurrentPage()
+                    true
+                } else false
+            }
+        })
+        recyclerView.addOnItemTouchListener(object : RecyclerView.SimpleOnItemTouchListener() {
+            override fun onInterceptTouchEvent(rv: RecyclerView, event: MotionEvent): Boolean {
+                detector.onTouchEvent(event)
+                return false
+            }
+        })
     }
 
     override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {

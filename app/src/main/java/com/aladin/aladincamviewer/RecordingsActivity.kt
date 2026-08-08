@@ -48,7 +48,12 @@ class RecordingsActivity : AppCompatActivity() {
         val start = date.atStartOfDay(zone).toInstant()
         val end = date.plusDays(1).atStartOfDay(zone).toInstant().minusMillis(1)
         showProgress(true)
-        runCatching { client.recordings(recorder, channel.channelNumber, start, end) }
+        runCatching {
+            check(NvrStreamProfile.supportsRecordingSearch(recorder.manufacturer)) {
+                getString(R.string.profile_g_playback_not_implemented, recorder.manufacturer)
+            }
+            client.recordings(recorder, channel.channelNumber, start, end)
+        }
             .onSuccess { segments ->
                 findViewById<RecyclerView>(R.id.recordings_list).adapter = SegmentAdapter(segments) { segment ->
                     val safeUrl = client.authenticatedPlaybackUrl(recorder, segment.playbackUri)

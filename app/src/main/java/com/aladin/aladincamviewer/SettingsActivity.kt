@@ -27,6 +27,7 @@ class SettingsActivity : AppCompatActivity() {
     
     private val viewModel: SettingsViewModel by viewModels()
     private var currentCameras: List<CameraEntity> = emptyList()
+    private var currentRecorderChannels: List<RecorderChannelWithRecorder> = emptyList()
 
     private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
         uri?.let { exportConfig(it) }
@@ -81,7 +82,13 @@ class SettingsActivity : AppCompatActivity() {
         lifecycleScope.launch {
             viewModel.allCameras.collect { cameras ->
                 currentCameras = cameras
-                setupGrid(cameras)
+                setupGrid()
+            }
+        }
+        lifecycleScope.launch {
+            viewModel.recorderChannels.collect { channels ->
+                currentRecorderChannels = channels
+                setupGrid()
             }
         }
         pinInput.hint = if (viewModel.hasPin()) getString(R.string.pin_configured_hint) else getString(R.string.pin_hint)
@@ -124,15 +131,38 @@ class SettingsActivity : AppCompatActivity() {
         if (pinChanged) viewModel.updatePin(pinInput.text.toString())
     }
 
-    private fun setupGrid(cameras: List<CameraEntity>) {
-        val slots = (1..16).map { i ->
-            cameras.find { it.displayOrder == i } ?: CameraEntity(name = "Empty", ipAddress = "", username = "", password = "", mainStreamUrl = "", subStreamUrl = "", displayOrder = i)
+    private fun setupGrid() {
+        val slotCount = maxOf(
+            16,
+            currentCameras.maxOfOrNull { it.displayOrder } ?: 0,
+            currentCameras.size + currentRecorderChannels.size
+        )
+        val slots = (1..slotCount).associateWith { order ->
+            currentCameras.find { it.displayOrder == order }?.let { camera ->
+                SettingsSlot(order, camera.name, camera.ipAddress, cameraId = camera.id)
+            }
+        }.toMutableMap()
+        val freeOrders = (1..slotCount).filter { slots[it] == null }.iterator()
+        currentRecorderChannels.forEach { row ->
+            if (!freeOrders.hasNext()) return@forEach
+            val order = freeOrders.next()
+            slots[order] = SettingsSlot(
+                order = order,
+                name = "${row.recorder.name} • ${row.channel.name}",
+                status = "${row.recorder.manufacturer} • ${row.recorder.ipAddress}",
+                recorderId = row.recorder.id
+            )
         }
-        recyclerView.adapter = CameraSlotAdapter(slots) { camera ->
-            val intent = Intent(this, EditCameraActivity::class.java)
-            intent.putExtra("camera_id", camera.id)
-            intent.putExtra("display_order", camera.displayOrder)
-            startActivity(intent)
+        recyclerView.adapter = CameraSlotAdapter((1..slotCount).map { order ->
+            slots[order] ?: SettingsSlot(order, getString(R.string.slot_label, order), getString(R.string.not_configured))
+        }) { slot ->
+            if (slot.recorderId != 0L) {
+                startActivity(Intent(this, RecordersActivity::class.java).putExtra("recorder_id", slot.recorderId))
+            } else {
+                startActivity(Intent(this, EditCameraActivity::class.java)
+                    .putExtra("camera_id", slot.cameraId)
+                    .putExtra("display_order", slot.order))
+            }
         }
     }
 
@@ -178,7 +208,15 @@ class SettingsActivity : AppCompatActivity() {
         startActivity(packageManager.getLaunchIntentForPackage(packageName))
     }
 
-    private class CameraSlotAdapter(private val slots: List<CameraEntity>, private val onClick: (CameraEntity) -> Unit) :
+    private data class SettingsSlot(
+        val order: Int,
+        val name: String,
+        val status: String,
+        val cameraId: Int = 0,
+        val recorderId: Long = 0
+    )
+
+    private class CameraSlotAdapter(private val slots: List<SettingsSlot>, private val onClick: (SettingsSlot) -> Unit) :
         RecyclerView.Adapter<CameraSlotAdapter.ViewHolder>() {
 
         class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
@@ -195,12 +233,11 @@ class SettingsActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val slot = slots[position]
-            val context = holder.itemView.context
-            holder.name.text = if (slot.name == "Empty") context.getString(R.string.slot_label, slot.displayOrder) else slot.name
-            holder.status.text = if (slot.ipAddress.isEmpty()) context.getString(R.string.not_configured) else slot.ipAddress
+            holder.name.text = slot.name
+            holder.status.text = slot.status
             holder.itemView.setOnClickListener { onClick(slot) }
             
-            if (slot.ipAddress.isEmpty()) {
+            if (slot.cameraId == 0 && slot.recorderId == 0L) {
                 holder.indicator.setBackgroundResource(R.drawable.led_offline)
             } else {
                 holder.indicator.setBackgroundResource(R.drawable.led_online)

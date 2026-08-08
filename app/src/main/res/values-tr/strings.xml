@@ -176,6 +176,9 @@
     <string name="recorders_title">KAYIT CİHAZLARI VE NVR</string>
     <string name="recorders_description">NVR cihazını bir kez ekleyin; aktif kanalları keşfedin, canlı yayınları ve geçmiş kayıtları izleyin.</string>
     <string name="recorder_name">Kayıt cihazı adı</string>
+    <string name="recorder_manufacturer">Kayıt cihazı üreticisi</string>
+    <string-array name="recorder_manufacturers"><item>Hikvision</item><item>Tiandy</item><item>Dahua</item><item>Hanwha Wisenet</item><item>Uniview (UNV)</item><item>XMeye</item></string-array>
+    <string name="recorder_channel_count">Kanal sayısı</string>
     <string name="ip_address">IP adresi</string>
     <string name="username">Kullanıcı adı</string>
     <string name="password">Parola</string>
@@ -185,6 +188,9 @@
     <string name="nvr_discovery_failed">Kayıt cihazı doğrulanamadı: %1$s</string>
     <string name="select_at_least_one_channel">En az bir kanal seçin.</string>
     <string name="recorder_saved">Kayıt cihazı ve kanalları kaydedildi.</string>
+    <string name="delete_recorder">Sil</string>
+    <string name="delete_recorder_confirm">%1$s ve bağlı tüm kanalları silinsin mi?</string>
+    <string name="recorder_deleted">Kayıt cihazı ve bağlı kanalları silindi.</string>
     <string name="recordings_title">KAYITLAR</string>
     <string name="recordings_for">%1$s KAYITLARI</string>
     <string name="search_recordings">ARA</string>
@@ -192,6 +198,7 @@
     <string name="invalid_date">Tarihi YYYY-AA-GG biçiminde girin.</string>
     <string name="no_recordings_found">Bu tarihte kayıt bulunamadı.</string>
     <string name="recording_search_failed">Kayıt araması başarısız: %1$s</string>
+    <string name="profile_g_playback_not_implemented">%1$s ONVIF Profile G destekliyor; ancak uygulamada Profile G kayıt oynatma henüz uygulanmadı. Kayıt cihazının web arayüzünü kullanabilirsiniz.</string>
     <string name="minutes_format">%1$d dk</string>
     <string name="recording_search_unavailable">Kayıt araması kullanılamıyor</string>
     <string name="open_nvr_web">NVR WEB SAYFASINI AÇ</string>

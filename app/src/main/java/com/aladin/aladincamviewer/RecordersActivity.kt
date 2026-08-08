@@ -13,12 +13,14 @@ class RecordersActivity : AppCompatActivity() {
     private val client = HikvisionIsapiClient()
     private var editingId = 0L
     private var discovered = emptyList<HikvisionChannel>()
+    private var requestedRecorderId = 0L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_recorders)
         TvFocusManager.install(this)
         repository = RecorderRepository(this)
+        requestedRecorderId = intent.getLongExtra("recorder_id", 0L)
         findViewById<EditText>(R.id.recorder_http_port).setText("80")
         findViewById<EditText>(R.id.recorder_rtsp_port).setText("554")
         findViewById<EditText>(R.id.recorder_username).setText("admin")
@@ -44,17 +46,29 @@ class RecordersActivity : AppCompatActivity() {
                     }
                 }
                 container.addView(button)
+                container.addView(com.google.android.material.button.MaterialButton(this@RecordersActivity).apply {
+                    text = getString(R.string.delete_recorder)
+                    isAllCaps = false
+                    setOnClickListener { confirmDelete(recorder) }
+                })
+            }
+            if (requestedRecorderId != 0L) {
+                recorders.firstOrNull { it.id == requestedRecorderId }?.let { recorder ->
+                    requestedRecorderId = 0L
+                    load(recorder)
+                }
             }
         }
     }
 
     private fun values(): RecorderEntity = RecorderEntity(
         id = editingId,
-        name = text(R.id.recorder_name).ifBlank { "Hikvision NVR" },
+        name = text(R.id.recorder_name).ifBlank { "${manufacturer()} NVR" },
         ipAddress = text(R.id.recorder_ip).trim(),
         httpPort = text(R.id.recorder_http_port).toIntOrNull() ?: 80,
         rtspPort = text(R.id.recorder_rtsp_port).toIntOrNull() ?: 554,
-        username = text(R.id.recorder_username), password = text(R.id.recorder_password)
+        username = text(R.id.recorder_username), password = text(R.id.recorder_password),
+        manufacturer = manufacturer(), protocol = NvrStreamProfile.protocol(manufacturer())
     )
 
     private fun discover() = lifecycleScope.launch {
@@ -62,9 +76,27 @@ class RecordersActivity : AppCompatActivity() {
         if (recorder.ipAddress.isBlank()) return@launch toast(R.string.enter_recorder_ip)
         progress(true)
         runCatching {
-            val info = client.deviceInfo(recorder.ipAddress, recorder.httpPort, recorder.username, recorder.password)
-            val channels = client.channels(recorder.ipAddress, recorder.httpPort, recorder.username, recorder.password)
-            info to channels
+            if (!recorder.manufacturer.equals(NvrStreamProfile.HIKVISION, true)) {
+                val result = RtspEndpointVerifier.verify(client.liveUrl(recorder, 1, false), recorder.username, recorder.password)
+                val requestedCount = text(R.id.recorder_channel_count).toIntOrNull()?.coerceIn(1, 128) ?: 16
+                val model = if (recorder.manufacturer.equals(NvrStreamProfile.TIANDY, true) && requestedCount == 20) "TC-R3120" else ""
+                if (result.playable) {
+                    val count = NvrStreamProfile.knownCapacity(recorder.manufacturer, model) ?: requestedCount
+                    HikvisionDeviceInfo(recorder.name, model, "") to
+                        (1..count).map { HikvisionChannel(it, "Kanal $it", true) }
+                } else {
+                    // Several Tiandy/ONVIF-compatible NVRs reject a standalone DESCRIBE
+                    // but expose channel metadata through the ISAPI-compatible endpoints.
+                    val info = client.deviceInfo(recorder.ipAddress, recorder.httpPort, recorder.username, recorder.password)
+                    val channels = client.channels(recorder.ipAddress, recorder.httpPort, recorder.username, recorder.password)
+                    check(channels.isNotEmpty()) { result.reason }
+                    info to channels.take(requestedCount)
+                }
+            } else {
+                val info = client.deviceInfo(recorder.ipAddress, recorder.httpPort, recorder.username, recorder.password)
+                val channels = client.channels(recorder.ipAddress, recorder.httpPort, recorder.username, recorder.password)
+                info to channels
+            }
         }.onSuccess { (info, channels) ->
             discovered = channels
             findViewById<EditText>(R.id.recorder_name).setText(info.name)
@@ -107,14 +139,33 @@ class RecordersActivity : AppCompatActivity() {
         set(R.id.recorder_name, recorder.name); set(R.id.recorder_ip, recorder.ipAddress)
         set(R.id.recorder_http_port, recorder.httpPort.toString()); set(R.id.recorder_rtsp_port, recorder.rtspPort.toString())
         set(R.id.recorder_username, recorder.username); set(R.id.recorder_password, recorder.password)
+        val spinner = findViewById<Spinner>(R.id.recorder_manufacturer)
+        val index = (0 until spinner.count).firstOrNull { spinner.getItemAtPosition(it).toString().equals(recorder.manufacturer, true) } ?: 0
+        spinner.setSelection(index)
         val saved = repository.getChannels(recorder.id)
+        set(R.id.recorder_channel_count, (saved.maxOfOrNull { it.channelNumber } ?: 20).toString())
         discovered = saved.map { HikvisionChannel(it.channelNumber, it.name, it.enabled) }
         renderChannels(discovered, saved.filter { it.enabled }.map { it.channelNumber }.toSet())
         findViewById<View>(R.id.btn_save_recorder).visibility = View.VISIBLE
     }
 
     private fun clearForm() { editingId = 0; discovered = emptyList(); findViewById<LinearLayout>(R.id.discovered_channels).removeAllViews() }
+    private fun confirmDelete(recorder: RecorderEntity) {
+        androidx.appcompat.app.AlertDialog.Builder(this)
+            .setTitle(R.string.delete_recorder)
+            .setMessage(getString(R.string.delete_recorder_confirm, recorder.name))
+            .setPositiveButton(R.string.delete_recorder) { _, _ ->
+                lifecycleScope.launch {
+                    repository.delete(recorder)
+                    if (editingId == recorder.id) clearForm()
+                    toast(R.string.recorder_deleted)
+                }
+            }
+            .setNegativeButton(R.string.cancel, null)
+            .show()
+    }
     private fun text(id: Int) = findViewById<EditText>(id).text.toString()
+    private fun manufacturer() = findViewById<Spinner>(R.id.recorder_manufacturer).selectedItem.toString()
     private fun set(id: Int, value: String) = findViewById<EditText>(id).setText(value)
     private fun progress(active: Boolean) { findViewById<View>(R.id.recorder_progress).visibility = if (active) View.VISIBLE else View.GONE }
     private fun toast(id: Int) = Toast.makeText(this, id, Toast.LENGTH_SHORT).show()

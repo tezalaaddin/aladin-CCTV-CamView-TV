@@ -100,4 +100,18 @@
         android:layout_margin="8dp"
         android:background="@drawable/led_offline" />
 
+    <TextView
+        android:id="@+id/camera_title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|start"
+        android:layout_margin="8dp"
+        android:background="#99000000"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:padding="6dp"
+        android:textColor="@color/white"
+        android:textSize="12sp"
+        android:textStyle="bold" />
+
 </com.google.android.material.card.MaterialCardView>
